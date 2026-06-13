@@ -1,54 +1,49 @@
 export default function Home() {
   return (
-    <main style={{
-      minHeight: "100vh",
-      background: "#ffffff",
-      color: "#000000",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "Arial",
-      padding: "40px"
-    }}>
+    <main className="min-h-screen bg-white text-black flex flex-col items-center justify-center font-sans p-10">
       
       {/* Logo */}
-      <h1 style={{ fontSize: 52, marginBottom: 10, letterSpacing: 2 }}>
+      <h1 className="text-5xl font-bold mb-3 text-[#0ea5e9]">
         AJOTORI
       </h1>
 
       {/* Slogan */}
-      <p style={{ fontSize: 18, opacity: 0.7, marginBottom: 50 }}>
+      <p className="text-lg text-gray-600 mb-12">
         Löydä ja myy ajoneuvot helposti
       </p>
 
       {/* Categories */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 200px)",
-        gap: 20
-      }}>
+      <div className="grid grid-cols-3 gap-5">
 
-        <div style={cardStyle}>🚗 Autot</div>
-        <div style={cardStyle}>🏍 Motot</div>
-        <div style={cardStyle}>🚜 Maatalouskoneet</div>
-        <div style={cardStyle}>🚧 Maanrakennuskoneet</div>
-        <div style={cardStyle}>🚛 Kuorma-autot</div>
-        <div style={cardStyle}>📦 Muut</div>
+        <div className="card">🚗 Autot</div>
+        <div className="card">🏍 Motot</div>
+        <div className="card">🚜 Maatalouskoneet</div>
+        <div className="card">🚧 Maanrakennuskoneet</div>
+        <div className="card">🚛 Kuorma-autot</div>
+        <div className="card">📦 Muut</div>
 
       </div>
+
+      {/* styles */}
+      <style jsx>{`
+        .card {
+          padding: 28px;
+          border-radius: 14px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          text-align: center;
+          font-size: 18px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .card:hover {
+          transform: translateY(-3px);
+          border-color: #0ea5e9;
+          color: #0ea5e9;
+        }
+      `}</style>
 
     </main>
   );
 }
-
-const cardStyle = {
-  background: "#f0f0f0",
-  padding: "30px",
-  borderRadius: "14px",
-  textAlign: "center",
-  fontSize: "18px",
-  cursor: "pointer",
-  transition: "0.2s",
-  userSelect: "none"
-};
