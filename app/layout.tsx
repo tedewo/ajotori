@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AJOTORI - Vehicle Marketplace",
-  description: "Find and sell vehicles easily",
-  viewport: "width=device-width, initial-scale=1",
+  title: "AJOTORI – Ajoneuvomarkkinapaikka",
+  description: "AJOTORI auttaa sinua löytämään ja myymään ajoneuvoja nopeasti ja luotettavasti.",
 };
 
 export default function RootLayout({
@@ -12,11 +12,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-      </head>
-      <body>{children}</body>
+    <html lang="fi">
+      <body className="bg-slate-50 text-slate-950 antialiased">
+        {children}
+      </body>
     </html>
   );
 }
