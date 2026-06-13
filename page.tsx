@@ -2,8 +2,8 @@ export default function Home() {
   return (
     <main style={{
       minHeight: "100vh",
-      background: "#0b0f19",
-      color: "white",
+      background: "#ffffff",
+      color: "#000000",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -43,7 +43,7 @@ export default function Home() {
 }
 
 const cardStyle = {
-  background: "#1c2436",
+  background: "#f0f0f0",
   padding: "30px",
   borderRadius: "14px",
   textAlign: "center",
