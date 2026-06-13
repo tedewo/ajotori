@@ -3,7 +3,7 @@ export default function Home() {
     <main className="min-h-screen bg-white text-black flex flex-col items-center justify-center font-sans p-10">
       
       {/* Logo */}
-      <h1 className="text-5xl font-bold mb-3 text-[#0ea5e9]">
+      <h1 className="text-5xl font-bold mb-3 text-sky-500">
         AJOTORI
       </h1>
 
@@ -15,34 +15,26 @@ export default function Home() {
       {/* Categories */}
       <div className="grid grid-cols-3 gap-5">
 
-        <div className="card">🚗 Autot</div>
-        <div className="card">🏍 Motot</div>
-        <div className="card">🚜 Maatalouskoneet</div>
-        <div className="card">🚧 Maanrakennuskoneet</div>
-        <div className="card">🚛 Kuorma-autot</div>
-        <div className="card">📦 Muut</div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          🚗 Autot
+        </div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          🏍 Motot
+        </div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          🚜 Maatalouskoneet
+        </div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          🚧 Maanrakennuskoneet
+        </div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          🚛 Kuorma-autot
+        </div>
+        <div className="p-7 rounded-lg bg-slate-50 border border-slate-200 text-center text-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:border-sky-500 hover:text-sky-500">
+          📦 Muut
+        </div>
 
       </div>
-
-      {/* styles */}
-      <style jsx>{`
-        .card {
-          padding: 28px;
-          border-radius: 14px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          text-align: center;
-          font-size: 18px;
-          cursor: pointer;
-          transition: 0.2s;
-        }
-
-        .card:hover {
-          transform: translateY(-3px);
-          border-color: #0ea5e9;
-          color: #0ea5e9;
-        }
-      `}</style>
 
     </main>
   );
