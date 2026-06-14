@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <main className="min-h-screen">
@@ -49,19 +51,30 @@ export default function Home() {
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { icon: '/icons/car.svg', title: 'Autot' },
-              { icon: '/icons/motorcycle.svg', title: 'Pienkoneet' },
-              { icon: '/icons/tractor.svg', title: 'Maatalouskoneet' },
-              { icon: '/icons/excavator.svg', title: 'Maanrakennuskoneet' },
-              { icon: '/icons/truck.svg', title: 'Kuorma-autot' },
-              { icon: '/icons/boat.svg', title: 'Muut ajoneuvot' },
+              { icon: '/icons/car.svg', title: 'Autot', href: '/autot' },
+              { icon: '/icons/motorcycle.svg', title: 'Pienkoneet', href: '/pienkoneet' },
+              { icon: '/icons/tractor.svg', title: 'Maa- ja metsätalouskoneet', href: '/maa-metsatalouskoneet' },
+              { icon: '/icons/excavator.svg', title: 'Maanrakennuskoneet', href: '/maanrakennus' },
+              { icon: '/icons/truck.svg', title: 'Kuorma-autot', href: '/kuorma-autot' },
+              { icon: '/icons/boat.svg', title: 'Muut ajoneuvot', href: '/muut-ajoneuvot' },
             ].map((cat) => (
-              <article key={cat.title} className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
-                <img src={cat.icon} alt="" className="h-12 w-12" />
-                <div>
-                  <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
-                </div>
-              </article>
+              cat.href ? (
+                <Link key={cat.title} href={cat.href}>
+                  <article className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
+                    <img src={cat.icon} alt="" className="h-12 w-12" />
+                    <div>
+                      <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
+                    </div>
+                  </article>
+                </Link>
+              ) : (
+                <article key={cat.title} className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
+                  <img src={cat.icon} alt="" className="h-12 w-12" />
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
+                  </div>
+                </article>
+              )
             ))}
           </div>
 
