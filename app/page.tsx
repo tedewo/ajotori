@@ -38,9 +38,11 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-slate-900">Myy ajoneuvosi helposti</h3>
                   <p className="mt-2 text-sm text-slate-600">Luo ilmoitus ilmaiseksi</p>
                 </div>
-                <button className="inline-flex items-center justify-center rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd]">
-                  Luo ilmoitus
-                </button>
+                <Link href="/ilmoitus/uusi">
+                  <button className="inline-flex items-center justify-center rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd]">
+                    Luo ilmoitus
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
