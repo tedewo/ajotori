@@ -1,10 +1,6 @@
 import Link from 'next/link';
-import ComingSoon from '../components/ComingSoon';
-import { COMING_SOON } from '../lib/featureFlags';
 
 export default function Home() {
-  if (COMING_SOON) return <ComingSoon />;
-
   return (
     <main className="min-h-screen">
       <div className="mx-auto container-center py-10">
@@ -76,7 +72,8 @@ export default function Home() {
                   <img src={cat.icon} alt="" className="h-12 w-12" />
                   <div>
                     <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
-                  </article>
+                  </div>
+                </article>
               )
             ))}
           </div>
@@ -129,70 +126,3 @@ export default function Home() {
     </main>
   );
 }
-                                  cat.href ? (
-                                    <Link key={cat.title} href={cat.href}>
-                                      <article className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
-                                        <img src={cat.icon} alt="" className="h-12 w-12" />
-                                        <div>
-                                          <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
-                                        </div>
-                                      </article>
-                                    </Link>
-                                  ) : (
-                                    <article key={cat.title} className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
-                                      <img src={cat.icon} alt="" className="h-12 w-12" />
-                                      <div>
-                                        <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
-                                      </article>
-                                  )
-                                ))}
-                              </div>
-
-                              <div className="mt-10 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-                                <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-                                  <h3 className="text-xl font-semibold text-slate-900">Muut tuoteryhmät</h3>
-                                  <div className="mt-4 space-y-3">
-                                    <a href="#" className="block rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Renkaat ja vanteet</a>
-                                    <a href="#" className="block rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Varaosat</a>
-                                  </div>
-                                </div>
-
-                                <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-                                  <h3 className="text-xl font-semibold text-slate-900">Viimeisimmät julkaisut</h3>
-                                  <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                    {[
-                                      { image: '/icons/car.svg', title: 'Ford Transit', price: '32 500 €' },
-                                      { image: '/icons/tractor.svg', title: 'John Deere 6120', price: '89 000 €' },
-                                      { image: '/icons/motorcycle.svg', title: 'Honda CBR 650R', price: '9 200 €' },
-                                    ].map((item) => (
-                                      <a key={item.title} href="#" className="group block rounded-[28px] border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white">
-                                        <div className="flex items-center gap-4">
-                                          <div className="grid h-20 w-20 place-items-center rounded-2xl bg-white shadow-sm">
-                                            <img src={item.image} alt="" className="h-12 w-12" />
-                                          </div>
-                                          <div>
-                                            <p className="text-sm font-semibold text-slate-900 group-hover:text-[#0ea5e9]">{item.title}</p>
-                                            <p className="mt-1 text-sm text-slate-600">{item.price}</p>
-                                          </div>
-                                        </div>
-                                      </a>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </section>
-
-                            <footer className="mt-16 border-t border-slate-200 pt-6 text-sm text-slate-600">
-                              <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-                                <div className="flex gap-4">
-                                  <a href="#" className="hover:text-slate-900">Tietosuojaseloste</a>
-                                  <a href="#" className="hover:text-slate-900">Käyttöehdot</a>
-                                  <a href="#" className="hover:text-slate-900">Yhteystiedot</a>
-                                </div>
-                                <div>© 2026 Ajotori</div>
-                              </div>
-                            </footer>
-                          </div>
-                        </main>
-                      );
-                    }
