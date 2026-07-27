@@ -78,6 +78,11 @@ function CreateListingDetailsContent() {
 
   const handleAddImages = (files: File[]) => {
     setImageError('');
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (files.some((f) => !allowed.includes(f.type))) {
+      setImageError('Väärä tiedostotyyppi. Sallitut: JPG, JPEG, PNG, WEBP.');
+      return;
+    }
     if (files.some((f) => f.size > MAX_IMAGE_SIZE_BYTES)) {
       setImageError(`Yksi tai useampi tiedosto on liian suuri. Maksimi ${MAX_IMAGE_SIZE_MB} Mt / kuva.`);
       return;
@@ -87,6 +92,15 @@ function CreateListingDetailsContent() {
       return;
     }
     setFormData((p) => ({ ...p, images: [...(p.images ?? []), ...files] }));
+  };
+
+  const handleReorderImages = (from: number, to: number) => {
+    setFormData((p) => {
+      const imgs = [...(p.images ?? [])];
+      const [moved] = imgs.splice(from, 1);
+      imgs.splice(to, 0, moved);
+      return { ...p, images: imgs };
+    });
   };
 
   const handleRemoveImage = (index: number) => {
@@ -162,7 +176,7 @@ function CreateListingDetailsContent() {
                         case 'textarea':
                           return <Textarea key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} />;
                         case 'image':
-                          return <ImageUpload key={field.key} images={formData.images ?? []} onAdd={handleAddImages} onRemove={handleRemoveImage} />;
+                          return <ImageUpload key={field.key} images={formData.images ?? []} onAdd={handleAddImages} onRemove={handleRemoveImage} onReorder={handleReorderImages} error={imageError} />;
                         case 'location':
                           return <LocationSelector key={field.key} region={formData.region ?? ''} city={formData.city ?? ''} onRegion={handleChange('region')} onCity={handleChange('city')} />;
                         case 'contact':
