@@ -1,3 +1,5 @@
+import { SUBCATEGORY_SLUGS } from './categories';
+
 export type FieldType =
   | 'text'
   | 'number'
@@ -37,14 +39,13 @@ export type FormConfig = {
 // Minimal configs for example vehicle types. Add new configs to support other types.
 export const FORM_CONFIGS: FormConfig[] = [
   {
-    slug: 'pakettiauto',
+    slug: SUBCATEGORY_SLUGS.pakettiautot,
     title: 'Pakettiauto',
     sections: [
       {
         key: 'basic',
         title: 'Perustiedot',
         fields: [
-          { key: 'title', label: 'Otsikko', type: 'text', required: true, placeholder: 'Esim. Ford Transit 2020' },
           { key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'Esim. Toyota' },
           { key: 'model', label: 'Malli', type: 'model', required: true, placeholder: 'Esim. Hiace' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
@@ -56,10 +57,10 @@ export const FORM_CONFIGS: FormConfig[] = [
         title: 'Tekniset tiedot',
         fields: [
           { key: 'mileage', label: 'Ajomäärä', type: 'number' },
-          { key: 'mileageUnit', label: 'KM / H', type: 'radio', options: ['km', 'h'] },
-          { key: 'transmission', label: 'Vaihteisto', type: 'text' },
+          { key: 'mileageUnit', label: 'Mittayksikkö', type: 'select', options: ['Kilometrit', 'Käyttötunnit'] },
+          { key: 'transmission', label: 'Vaihteisto', type: 'select', options: ['Manuaali', 'Automaatti', 'Puoliautomaatti', 'CVT', 'Muu'] },
           { key: 'drivetrain', label: 'Vetotapa', type: 'text' },
-          { key: 'fuel', label: 'Käyttövoima', type: 'text' },
+          { key: 'fuel', label: 'Käyttövoima', type: 'select', options: ['Diesel', 'Bensiini', 'Sähkö', 'Hybridi', 'Kaasu', 'Etanoli', 'Vety', 'Muu'] },
           { key: 'engineSize', label: 'Moottorin koko', type: 'text' },
           { key: 'power', label: 'Teho', type: 'number' },
           { key: 'payload', label: 'Kantavuus', type: 'text' },
@@ -91,22 +92,14 @@ export const FORM_CONFIGS: FormConfig[] = [
     ],
   },
 
-  // plural alias to match categories subcategory slug
   {
-    slug: 'pakettiautot',
-    title: 'Pakettiautot',
-    sections: [],
-  },
-
-  {
-    slug: 'henkiloauto',
+    slug: SUBCATEGORY_SLUGS.henkiloautot,
     title: 'Henkilöauto',
     sections: [
       {
         key: 'basic',
         title: 'Perustiedot',
         fields: [
-          { key: 'title', label: 'Otsikko', type: 'text', required: true },
           { key: 'brand', label: 'Merkki', type: 'brand', required: true },
           { key: 'model', label: 'Malli', type: 'model' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
@@ -118,10 +111,10 @@ export const FORM_CONFIGS: FormConfig[] = [
         title: 'Tekniset tiedot',
         fields: [
           { key: 'mileage', label: 'Ajomäärä', type: 'number' },
-          { key: 'mileageUnit', label: 'KM / H', type: 'radio', options: ['km', 'h'] },
-          { key: 'transmission', label: 'Vaihteisto', type: 'text' },
+          { key: 'mileageUnit', label: 'Mittayksikkö', type: 'select', options: ['Kilometrit', 'Käyttötunnit'] },
+          { key: 'transmission', label: 'Vaihteisto', type: 'select', options: ['Manuaali', 'Automaatti', 'Puoliautomaatti', 'CVT', 'Muu'] },
           { key: 'drivetrain', label: 'Vetotapa', type: 'text' },
-          { key: 'fuel', label: 'Käyttövoima', type: 'text' },
+          { key: 'fuel', label: 'Käyttövoima', type: 'select', options: ['Diesel', 'Bensiini', 'Sähkö', 'Hybridi', 'Kaasu', 'Etanoli', 'Vety', 'Muu'] },
           { key: 'engineSize', label: 'Moottorin koko', type: 'text' },
           { key: 'power', label: 'Teho', type: 'number' },
           { key: 'doorCount', label: 'Ovien määrä', type: 'number' },
@@ -142,17 +135,11 @@ export const FORM_CONFIGS: FormConfig[] = [
   },
 
   {
-    slug: 'henkiloautot',
-    title: 'Henkilöautot',
-    sections: [],
-  },
-
-  {
-    slug: 'traktori',
+    slug: SUBCATEGORY_SLUGS.traktorit,
     title: 'Traktori',
     sections: [
-      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'title', label: 'Otsikko', type: 'text' }, { key: 'price', label: 'Hinta (€)', type: 'number' }] },
-      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'drivetrain', label: 'Vetotapa', type: 'text' }, { key: 'transmission', label: 'Vaihteisto', type: 'text' }, { key: 'frontLoader', label: 'Etukuormain', type: 'checkbox' }, { key: 'frontLoaderAttachment', label: 'Etunostolaite', type: 'checkbox' }, { key: 'weight', label: 'Paino', type: 'text' }, { key: 'attachments', label: 'Ulosotot', type: 'text' }] },
+      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'price', label: 'Hinta (€)', type: 'number' }] },
+      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'mileageUnit', label: 'Mittayksikkö', type: 'select', options: ['Kilometrit', 'Käyttötunnit'] }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'drivetrain', label: 'Vetotapa', type: 'text' }, { key: 'transmission', label: 'Vaihteisto', type: 'select', options: ['Manuaali', 'Automaatti', 'Puoliautomaatti', 'CVT', 'Muu'] }, { key: 'fuel', label: 'Käyttövoima', type: 'select', options: ['Diesel', 'Bensiini', 'Sähkö', 'Hybridi', 'Kaasu', 'Etanoli', 'Vety', 'Muu'] }, { key: 'frontLoader', label: 'Etukuormain', type: 'checkbox' }, { key: 'frontLoaderAttachment', label: 'Etunostolaite', type: 'checkbox' }, { key: 'weight', label: 'Paino', type: 'text' }, { key: 'attachments', label: 'Ulosotot', type: 'text' }] },
       { key: 'features', title: 'Varusteet', fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: ['Huoltokirja', 'Etukuormain', 'Ilmastointi'] }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
@@ -162,17 +149,11 @@ export const FORM_CONFIGS: FormConfig[] = [
   },
 
   {
-    slug: 'traktorit',
-    title: 'Traktorit',
-    sections: [],
-  },
-
-  {
-    slug: 'kaivinkone',
+    slug: SUBCATEGORY_SLUGS.kaivinkoneet,
     title: 'Kaivinkone',
     sections: [
-      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'title', label: 'Otsikko', type: 'text' }, { key: 'price', label: 'Hinta (€)', type: 'number' }] },
-      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'tareWeight', label: 'Käyttöpaino', type: 'text' }, { key: 'boomType', label: 'Puomin tyyppi', type: 'text' }, { key: 'bucketCount', label: 'Kauhat', type: 'number' }, { key: 'quickCoupler', label: 'Pikakiinnike', type: 'checkbox' }, { key: 'power', label: 'Teho', type: 'number' }] },
+      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'price', label: 'Hinta (€)', type: 'number' }] },
+      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'mileageUnit', label: 'Mittayksikkö', type: 'select', options: ['Kilometrit', 'Käyttötunnit'] }, { key: 'tareWeight', label: 'Käyttöpaino', type: 'text' }, { key: 'boomType', label: 'Puomin tyyppi', type: 'text' }, { key: 'bucketCount', label: 'Kauhat', type: 'number' }, { key: 'quickCoupler', label: 'Pikakiinnike', type: 'checkbox' }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'transmission', label: 'Vaihteisto', type: 'select', options: ['Manuaali', 'Automaatti', 'Puoliautomaatti', 'CVT', 'Muu'] }, { key: 'fuel', label: 'Käyttövoima', type: 'select', options: ['Diesel', 'Bensiini', 'Sähkö', 'Hybridi', 'Kaasu', 'Etanoli', 'Vety', 'Muu'] }] },
       { key: 'features', title: 'Varusteet', fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: ['Huoltokirja', 'Lisäkoukku', 'Ilmastointi'] }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
@@ -181,11 +162,7 @@ export const FORM_CONFIGS: FormConfig[] = [
     ],
   },
 
-  {
-    slug: 'kaivinkoneet',
-    title: 'Kaivinkoneet',
-    sections: [],
-  },
+
 ];
 
 export function getFormConfigBySlug(slug: string) {

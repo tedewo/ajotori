@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -16,7 +16,6 @@ import Textarea from '@/app/components/form/Textarea';
 import ImageUpload from '@/app/components/form/ImageUpload';
 import LocationSelector from '@/app/components/form/LocationSelector';
 import ContactInformation from '@/app/components/form/ContactInformation';
-import ProgressBar from '@/app/components/form/ProgressBar';
 import SmartTextField from '@/app/components/form/SmartTextField';
 
 const MAX_IMAGES = 6;
@@ -56,6 +55,18 @@ function CreateListingDetailsContent() {
   const [formData, setFormData] = useState<Record<string, any>>(initialValues);
   const [submitMessage, setSubmitMessage] = useState('');
   const [imageError, setImageError] = useState('');
+  const [activeSectionKey, setActiveSectionKey] = useState(formConfig?.sections[0]?.key ?? '');
+
+  useEffect(() => {
+    setActiveSectionKey(formConfig?.sections[0]?.key ?? '');
+  }, [formConfig]);
+
+  const createGeneratedTitle = (values: Record<string, any>) => {
+    const brand = typeof values.brand === 'string' ? values.brand.trim() : '';
+    const model = typeof values.model === 'string' ? values.model.trim() : '';
+    const year = typeof values.year === 'string' || typeof values.year === 'number' ? String(values.year).trim() : '';
+    return [brand, model, year].filter(Boolean).join(' ');
+  };
 
   const handleChange = (key: string) => (value: any) => {
     setSubmitMessage('');
@@ -71,8 +82,26 @@ function CreateListingDetailsContent() {
       const year = typeof next.year === 'string' || typeof next.year === 'number' ? String(next.year).trim() : '';
       const tags = [brand, model, year].filter(Boolean);
       next.searchTags = tags;
+      next.title = createGeneratedTitle(next);
       return next;
     });
+  };
+
+  const handlePowerChange = (powerValue: string) => {
+    setFormData((p) => ({
+      ...p,
+      power: powerValue,
+      powerUnit: p.powerUnit ?? 'kW',
+      powerEquivalent: powerValue ? (p.powerUnit === 'hv' ? `${Math.round(Number(powerValue) * 0.735499)}` : `${Math.round(Number(powerValue) / 0.735499)}`) : '',
+    }));
+  };
+
+  const handlePowerUnitChange = (unit: string) => {
+    setFormData((p) => ({
+      ...p,
+      powerUnit: unit,
+      powerEquivalent: p.power ? (unit === 'hv' ? `${Math.round(Number(p.power) * 0.735499)}` : `${Math.round(Number(p.power) / 0.735499)}`) : '',
+    }));
   };
 
   const handleAddImages = (files: File[]) => {
@@ -153,14 +182,32 @@ function CreateListingDetailsContent() {
         <div className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 mb-6">Vaihe 3: Syötä ilmoituksen tiedot</h2>
 
-          <ProgressBar steps={["Perustiedot","Tekniset tiedot","Varusteet","Kuvat","Yhteystiedot","Julkaisu"]} active={1} />
-
           <form className="space-y-8" onSubmit={handleSubmit}>
             {!formConfig ? (
               <div className="rounded-[24px] border border-red-200 bg-red-50 p-4 text-sm text-red-900">Konfiguraatiota ei löytynyt valitulle alaluokalle.</div>
             ) : null}
 
-            {formConfig?.sections.map((section) => (
+            {formConfig?.sections.length ? (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {formConfig.sections.map((section) => {
+                  const isActive = activeSectionKey === section.key;
+                  return (
+                    <button
+                      key={section.key}
+                      type="button"
+                      onClick={() => setActiveSectionKey(section.key)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        isActive ? 'bg-[#0ea5e9] text-white shadow-sm' : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {section.title}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {formConfig?.sections.filter((section) => section.key === activeSectionKey).map((section) => (
               <div key={section.key}>
                 <SectionCard title={section.title}>
                   <div className="grid gap-6 lg:grid-cols-2">
@@ -173,9 +220,67 @@ function CreateListingDetailsContent() {
                         case 'model':
                           return <SmartTextField key={field.key} id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} mode="model" suggestionSource={String(formData.brand ?? '')} />;
                         case 'number':
+                          if (field.key === 'power') {
+                            return (
+                              <div key={field.key} className="space-y-3">
+                                <label htmlFor="power" className="block text-sm font-medium text-slate-900 mb-2">{field.label}</label>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                  <input
+                                    id="power"
+                                    type="number"
+                                    value={String(formData.power ?? '')}
+                                    onChange={(e) => handlePowerChange(e.target.value)}
+                                    placeholder={field.placeholder}
+                                    className="w-full rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                                  />
+                                  <select
+                                    id="powerUnit"
+                                    value={String(formData.powerUnit ?? 'kW')}
+                                    onChange={(e) => handlePowerUnitChange(e.target.value)}
+                                    className="rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                                  >
+                                    <option value="kW">kW</option>
+                                    <option value="hv">hv</option>
+                                  </select>
+                                </div>
+                                {formData.power ? (
+                                  <p className="text-sm text-slate-500">Vastaava arvo tallennetaan haussa: {formData.powerEquivalent ? `${formData.powerEquivalent} ${formData.powerUnit === 'kW' ? 'hv' : 'kW'}` : '—'}</p>
+                                ) : null}
+                              </div>
+                            );
+                          }
                           return <NumberField key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} />;
                         case 'select':
-                          return <SelectField key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} options={field.options ?? []} />;
+                          if (field.key === 'transmission') {
+                            return (
+                              <div key={field.key} className="space-y-3">
+                                <SelectField id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} options={field.options ?? []} />
+                                {String(formData[field.key] ?? '') === 'Muu' ? (
+                                  <TextField id="transmissionOther" label="Muu vaihteisto" value={String(formData.transmissionOther ?? '')} onChange={handleChange('transmissionOther')} placeholder="Esim. CVT" />
+                                ) : null}
+                              </div>
+                            );
+                          }
+                          if (field.key === 'fuel') {
+                            return (
+                              <div key={field.key} className="space-y-3">
+                                <SelectField id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} options={field.options ?? []} />
+                                {String(formData[field.key] ?? '') === 'Muu' ? (
+                                  <TextField id="fuelOther" label="Muu käyttövoima" value={String(formData.fuelOther ?? '')} onChange={handleChange('fuelOther')} placeholder="Esim. etanoli" />
+                                ) : null}
+                                {String(formData[field.key] ?? '') === 'Hybridi' ? (
+                                  <div className="space-y-3 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                                    <SelectField id="hybridType" label="Hybridityyppi" value={String(formData.hybridType ?? '')} onChange={handleChange('hybridType')} options={['Bensiini + sähkö', 'Diesel + sähkö', 'Muu hybridi']} />
+                                    <label className="inline-flex items-center gap-3 rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700">
+                                      <input type="checkbox" checked={!!formData.plugInHybrid} onChange={(e) => handleChange('plugInHybrid')(e.target.checked)} className="h-4 w-4" />
+                                      Plug-in (ladattava hybridi)
+                                    </label>
+                                  </div>
+                                ) : null}
+                              </div>
+                            );
+                          }
+                          return <SelectField key={field.key} id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} options={field.options ?? []} />;
                         case 'radio':
                           return (
                             <div key={field.key}>
