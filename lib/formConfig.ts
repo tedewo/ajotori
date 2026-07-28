@@ -8,7 +8,9 @@ export type FieldType =
   | 'textarea'
   | 'image'
   | 'location'
-  | 'contact';
+  | 'contact'
+  | 'brand'
+  | 'model';
 
 export type Field = {
   key: string;
@@ -43,8 +45,8 @@ export const FORM_CONFIGS: FormConfig[] = [
         title: 'Perustiedot',
         fields: [
           { key: 'title', label: 'Otsikko', type: 'text', required: true, placeholder: 'Esim. Ford Transit 2020' },
-          { key: 'brand', label: 'Merkki', type: 'text', required: true },
-          { key: 'model', label: 'Malli', type: 'text', required: true },
+          { key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'Esim. Toyota' },
+          { key: 'model', label: 'Malli', type: 'model', required: true, placeholder: 'Esim. Hiace' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
           { key: 'price', label: 'Hinta (€)', type: 'number', required: true },
         ],
@@ -61,6 +63,9 @@ export const FORM_CONFIGS: FormConfig[] = [
           { key: 'engineSize', label: 'Moottorin koko', type: 'text' },
           { key: 'power', label: 'Teho', type: 'number' },
           { key: 'payload', label: 'Kantavuus', type: 'text' },
+          { key: 'totalWeight', label: 'Kokonaismassa', type: 'text' },
+          { key: 'doorCount', label: 'Ovien määrä', type: 'number' },
+          { key: 'seatingCapacity', label: 'Istumapaikat', type: 'number' },
         ],
       },
       {
@@ -68,8 +73,8 @@ export const FORM_CONFIGS: FormConfig[] = [
         title: 'Ulkonäkö',
         fields: [
           { key: 'color', label: 'Väri', type: 'text' },
-          { key: 'interiorColor', label: 'Sisustan väri', type: 'text' },
-          { key: 'interiorMaterial', label: 'Sisustan materiaali', type: 'text' },
+          { key: 'interiorColor', label: 'Sisustan väri (valinnainen)', type: 'text' },
+          { key: 'interiorMaterial', label: 'Sisustan materiaali (valinnainen)', type: 'text' },
         ],
       },
       {
@@ -102,8 +107,8 @@ export const FORM_CONFIGS: FormConfig[] = [
         title: 'Perustiedot',
         fields: [
           { key: 'title', label: 'Otsikko', type: 'text', required: true },
-          { key: 'brand', label: 'Merkki', type: 'text', required: true },
-          { key: 'model', label: 'Malli', type: 'text' },
+          { key: 'brand', label: 'Merkki', type: 'brand', required: true },
+          { key: 'model', label: 'Malli', type: 'model' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
           { key: 'price', label: 'Hinta (€)', type: 'number' },
         ],
@@ -118,9 +123,16 @@ export const FORM_CONFIGS: FormConfig[] = [
           { key: 'drivetrain', label: 'Vetotapa', type: 'text' },
           { key: 'fuel', label: 'Käyttövoima', type: 'text' },
           { key: 'engineSize', label: 'Moottorin koko', type: 'text' },
+          { key: 'power', label: 'Teho', type: 'number' },
+          { key: 'doorCount', label: 'Ovien määrä', type: 'number' },
+          { key: 'seatingCapacity', label: 'Istumapaikat', type: 'number' },
         ],
       },
-      { key: 'appearance', title: 'Ulkonäkö', fields: [{ key: 'color', label: 'Väri', type: 'text' }] },
+      { key: 'appearance', title: 'Ulkonäkö', fields: [
+          { key: 'color', label: 'Väri', type: 'text' },
+          { key: 'interiorColor', label: 'Sisustan väri (valinnainen)', type: 'text' },
+          { key: 'interiorMaterial', label: 'Sisustan materiaali (valinnainen)', type: 'text' },
+        ], },
       { key: 'features', title: 'Varusteet', fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: ['Huoltokirja', 'Ilmastointi', 'Vetokoukku'] }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
@@ -140,7 +152,7 @@ export const FORM_CONFIGS: FormConfig[] = [
     title: 'Traktori',
     sections: [
       { key: 'basic', title: 'Perustiedot', fields: [{ key: 'title', label: 'Otsikko', type: 'text' }, { key: 'price', label: 'Hinta (€)', type: 'number' }] },
-      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'drivetrain', label: 'Vetotapa', type: 'text' }, { key: 'frontLoader', label: 'Etukuormain', type: 'checkbox' }, { key: 'weight', label: 'Paino', type: 'text' }] },
+      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'drivetrain', label: 'Vetotapa', type: 'text' }, { key: 'transmission', label: 'Vaihteisto', type: 'text' }, { key: 'frontLoader', label: 'Etukuormain', type: 'checkbox' }, { key: 'frontLoaderAttachment', label: 'Etunostolaite', type: 'checkbox' }, { key: 'weight', label: 'Paino', type: 'text' }, { key: 'attachments', label: 'Ulosotot', type: 'text' }] },
       { key: 'features', title: 'Varusteet', fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: ['Huoltokirja', 'Etukuormain', 'Ilmastointi'] }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
@@ -160,7 +172,7 @@ export const FORM_CONFIGS: FormConfig[] = [
     title: 'Kaivinkone',
     sections: [
       { key: 'basic', title: 'Perustiedot', fields: [{ key: 'title', label: 'Otsikko', type: 'text' }, { key: 'price', label: 'Hinta (€)', type: 'number' }] },
-      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'tareWeight', label: 'Työpaino', type: 'text' }, { key: 'boomLength', label: 'Puomin pituus', type: 'text' }, { key: 'trackType', label: 'Telat', type: 'select', options: ['Kumitelat', 'Terästelat'] }, { key: 'power', label: 'Teho', type: 'number' }] },
+      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'tareWeight', label: 'Käyttöpaino', type: 'text' }, { key: 'boomType', label: 'Puomin tyyppi', type: 'text' }, { key: 'bucketCount', label: 'Kauhat', type: 'number' }, { key: 'quickCoupler', label: 'Pikakiinnike', type: 'checkbox' }, { key: 'power', label: 'Teho', type: 'number' }] },
       { key: 'features', title: 'Varusteet', fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: ['Huoltokirja', 'Lisäkoukku', 'Ilmastointi'] }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },

@@ -12,11 +12,14 @@ type Props = {
 };
 
 export default function NumberField({ id, label, value, onChange, placeholder, required }: Props) {
+  const showOptionalHint = !required && label.toLowerCase().includes('valinnainen');
+
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-slate-900 mb-2">
         {label} {required ? '*' : ''}
       </label>
+      {showOptionalHint ? <p className="mb-2 text-xs text-slate-500">Valinnainen</p> : null}
       <input
         id={id}
         type="number"

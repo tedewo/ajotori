@@ -17,6 +17,7 @@ import ImageUpload from '@/app/components/form/ImageUpload';
 import LocationSelector from '@/app/components/form/LocationSelector';
 import ContactInformation from '@/app/components/form/ContactInformation';
 import ProgressBar from '@/app/components/form/ProgressBar';
+import SmartTextField from '@/app/components/form/SmartTextField';
 
 const MAX_IMAGES = 6;
 const MAX_IMAGE_SIZE_MB = 10;
@@ -48,6 +49,7 @@ function CreateListingDetailsContent() {
       base.province = '';
       base.municipality = '';
     }
+    base.searchTags = [];
     return base;
   }, [formConfig, categorySlug, subcategorySlug]);
 
@@ -61,7 +63,16 @@ function CreateListingDetailsContent() {
       setFormData((p) => ({ ...p, province: value, municipality: '' }));
       return;
     }
-    setFormData((p) => ({ ...p, [key]: value }));
+
+    setFormData((p) => {
+      const next = { ...p, [key]: value };
+      const brand = typeof next.brand === 'string' ? next.brand.trim() : '';
+      const model = typeof next.model === 'string' ? next.model.trim() : '';
+      const year = typeof next.year === 'string' || typeof next.year === 'number' ? String(next.year).trim() : '';
+      const tags = [brand, model, year].filter(Boolean);
+      next.searchTags = tags;
+      return next;
+    });
   };
 
   const handleAddImages = (files: File[]) => {
@@ -97,6 +108,11 @@ function CreateListingDetailsContent() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const isFormValid = event.currentTarget.reportValidity();
+    if (!isFormValid) {
+      return;
+    }
 
     if (!formData.province) {
       setSubmitMessage('Maakunta on pakollinen.');
@@ -152,6 +168,10 @@ function CreateListingDetailsContent() {
                       switch (field.type) {
                         case 'text':
                           return <TextField key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} />;
+                        case 'brand':
+                          return <SmartTextField key={field.key} id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} mode="brand" />;
+                        case 'model':
+                          return <SmartTextField key={field.key} id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} mode="model" suggestionSource={String(formData.brand ?? '')} />;
                         case 'number':
                           return <NumberField key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} />;
                         case 'select':
