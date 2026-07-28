@@ -18,22 +18,6 @@ import LocationSelector from '@/app/components/form/LocationSelector';
 import ContactInformation from '@/app/components/form/ContactInformation';
 import ProgressBar from '@/app/components/form/ProgressBar';
 
-const regions = [
-  'Uusimaa',
-  'Pirkanmaa',
-  'Varsinais-Suomi',
-  'Keski-Suomi',
-  'Pohjois-Pohjanmaa',
-] as const;
-
-const citiesByRegion: Record<string, string[]> = {
-  Uusimaa: ['Helsinki', 'Espoo', 'Vantaa'],
-  Pirkanmaa: ['Tampere', 'Nokia', 'Valkeakoski'],
-  'Varsinais-Suomi': ['Turku', 'Salo', 'Kaarina'],
-  'Keski-Suomi': ['Jyväskylä', 'Jämsä', 'Äänekoski'],
-  'Pohjois-Pohjanmaa': ['Oulu', 'Raahe', 'Kuusamo'],
-};
-
 const MAX_IMAGES = 6;
 const MAX_IMAGE_SIZE_MB = 10;
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
@@ -51,6 +35,7 @@ function CreateListingDetailsContent() {
   const initialValues = useMemo(() => {
     const base: Record<string, any> = { category: categorySlug, subcategory: subcategorySlug };
     if (!formConfig) return base;
+    const hasLocationField = formConfig.sections.some((section) => section.fields.some((field) => field.type === 'location'));
     formConfig.sections.forEach((sec) => {
       sec.fields.forEach((f) => {
         if (f.type === 'checkboxGroup') base[f.key] = [];
@@ -59,6 +44,10 @@ function CreateListingDetailsContent() {
         else base[f.key] = '';
       });
     });
+    if (hasLocationField) {
+      base.province = '';
+      base.municipality = '';
+    }
     return base;
   }, [formConfig, categorySlug, subcategorySlug]);
 
@@ -66,11 +55,10 @@ function CreateListingDetailsContent() {
   const [submitMessage, setSubmitMessage] = useState('');
   const [imageError, setImageError] = useState('');
 
-  const cityOptions = formData.region ? citiesByRegion[formData.region] ?? [] : [];
-
   const handleChange = (key: string) => (value: any) => {
-    if (key === 'region') {
-      setFormData((p) => ({ ...p, region: value, city: '' }));
+    setSubmitMessage('');
+    if (key === 'province') {
+      setFormData((p) => ({ ...p, province: value, municipality: '' }));
       return;
     }
     setFormData((p) => ({ ...p, [key]: value }));
@@ -109,6 +97,17 @@ function CreateListingDetailsContent() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!formData.province) {
+      setSubmitMessage('Maakunta on pakollinen.');
+      return;
+    }
+
+    if (!formData.municipality) {
+      setSubmitMessage('Kaupunki / kunta on pakollinen.');
+      return;
+    }
+
     console.log('Ilmoitustiedot:', formData);
     setSubmitMessage('Ilmoituksen tallennus toteutetaan seuraavassa vaiheessa.');
   };
@@ -178,7 +177,7 @@ function CreateListingDetailsContent() {
                         case 'image':
                           return <ImageUpload key={field.key} images={formData.images ?? []} onAdd={handleAddImages} onRemove={handleRemoveImage} onReorder={handleReorderImages} error={imageError} />;
                         case 'location':
-                          return <LocationSelector key={field.key} region={formData.region ?? ''} city={formData.city ?? ''} onRegion={handleChange('region')} onCity={handleChange('city')} />;
+                          return <LocationSelector key={field.key} province={formData.province ?? ''} municipality={formData.municipality ?? ''} onProvince={handleChange('province')} onMunicipality={handleChange('municipality')} />;
                         case 'contact':
                           return <ContactInformation key={field.key} phone={formData.phone ?? ''} email={formData.email ?? ''} onPhone={handleChange('phone')} onEmail={handleChange('email')} />;
                         case 'checkbox':
