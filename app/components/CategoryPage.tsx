@@ -16,7 +16,13 @@ export default function CategoryPage({
           <h1 className="text-3xl font-semibold leading-tight text-slate-900">{title}</h1>
           <p className="mt-2 text-sm text-slate-600">{subtitle}</p>
 
-          <CategoryGrid categories={categories} />
+          {categories.length > 0 ? (
+            <CategoryGrid categories={categories} />
+          ) : (
+            <div className="mt-6 rounded-[32px] border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-600">
+              Tähän kategoriaan ei ole vielä lisätty alaluokkia.
+            </div>
+          )}
         </section>
 
         <footer className="mt-16 border-t border-slate-200 pt-6 text-sm text-slate-600">

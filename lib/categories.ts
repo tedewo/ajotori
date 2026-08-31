@@ -1,3 +1,15 @@
+export const CATEGORY_SLUGS = {
+  autot: 'autot',
+  pienkoneet: 'pienkoneet',
+  maatalouskoneet: 'maatalouskoneet',
+  metsatalouskoneet: 'metsatalouskoneet',
+  maanrakennus: 'maanrakennus',
+  kuormaAutot: 'kuorma-autot',
+  muutAjoneuvot: 'muut-ajoneuvot',
+  veneet: 'veneet',
+  empty1: 'empty1',
+} as const;
+
 export const SUBCATEGORY_SLUGS = {
   henkiloautot: 'henkiloautot',
   pakettiautot: 'pakettiautot',
@@ -61,11 +73,55 @@ export interface Category {
   subcategories: Subcategory[];
 }
 
+const createMaatalouskoneetCategory = (): Category => ({
+  icon: '/icons/tractor.svg',
+  title: 'Maatalouskoneet',
+  slug: CATEGORY_SLUGS.maatalouskoneet,
+  href: '/maatalouskoneet',
+  subcategories: [
+    { icon: '/icons/tractor.svg', title: 'Traktorit', slug: SUBCATEGORY_SLUGS.traktorit, href: '/maatalouskoneet/traktorit' },
+    { icon: '/icons/tractor.svg', title: 'Puimurit', slug: SUBCATEGORY_SLUGS.puimurit, href: '/maatalouskoneet/puimurit' },
+    { icon: '/icons/tractor.svg', title: 'Muut maatalouskoneet', slug: SUBCATEGORY_SLUGS.muutmaatalouskoneet, href: '/maatalouskoneet/muut-maatalouskoneet' },
+    { icon: '/icons/tractor.svg', title: 'Traktorin lisälaitteet', slug: SUBCATEGORY_SLUGS.traktorinlisalaitteet, href: '/maatalouskoneet/traktorin-lisalaitteet' },
+    { icon: '/icons/tractor.svg', title: 'Traktorin perävaunut', slug: SUBCATEGORY_SLUGS.traktorinperavaunut, href: '/maatalouskoneet/traktorin-peravaunut' },
+  ],
+});
+
+const createMetsatalouskoneetCategory = (): Category => ({
+  icon: '/icons/excavator.svg',
+  title: 'Metsätalouskoneet',
+  slug: CATEGORY_SLUGS.metsatalouskoneet,
+  href: '/metsatalouskoneet',
+  subcategories: [
+    { icon: '/icons/tractor.svg', title: 'Metsätraktorit', slug: SUBCATEGORY_SLUGS.metsatraktorit, href: '/metsatalouskoneet/metsatraktorit' },
+    { icon: '/icons/excavator.svg', title: 'Harvesterit', slug: SUBCATEGORY_SLUGS.harvesterit, href: '/metsatalouskoneet/harvesterit' },
+    { icon: '/icons/excavator.svg', title: 'Muut metsäkoneet', slug: SUBCATEGORY_SLUGS.muutmetsakoneet, href: '/metsatalouskoneet/muut-metsakoneet' },
+  ],
+});
+
+const createVeneetCategory = (): Category => ({
+  icon: '/icons/boat.svg',
+  title: 'Veneet',
+  slug: CATEGORY_SLUGS.veneet,
+  href: '/veneet',
+  subcategories: [
+    { icon: '/icons/boat.svg', title: 'Veneet', slug: SUBCATEGORY_SLUGS.veneet, href: '/veneet/veneet' },
+  ],
+});
+
+const createEmptyCategory = (): Category => ({
+  icon: '/icons/boat.svg',
+  title: 'empty1',
+  slug: CATEGORY_SLUGS.empty1,
+  href: '/empty1',
+  subcategories: [],
+});
+
 export const categories: Category[] = [
   {
     icon: '/icons/car.svg',
     title: 'Autot',
-    slug: 'autot',
+    slug: CATEGORY_SLUGS.autot,
     href: '/autot',
     subcategories: [
       { icon: '/icons/car.svg', title: 'Henkilöautot', slug: SUBCATEGORY_SLUGS.henkiloautot, href: '/autot/henkiloautot' },
@@ -80,7 +136,7 @@ export const categories: Category[] = [
   {
     icon: '/icons/motorcycle.svg',
     title: 'Pienkoneet',
-    slug: 'pienkoneet',
+    slug: CATEGORY_SLUGS.pienkoneet,
     href: '/pienkoneet',
     subcategories: [
       { icon: '/icons/motorcycle.svg', title: 'Moottoripyörät', slug: SUBCATEGORY_SLUGS.moottoripyorat, href: '/pienkoneet/moottoripyorat' },
@@ -93,26 +149,12 @@ export const categories: Category[] = [
       { icon: '/icons/boat.svg', title: 'Pienkoneiden perävaunut', slug: SUBCATEGORY_SLUGS.pienkoneidenperavaunut, href: '/pienkoneet/pienkoneiden-peravaunut' },
     ],
   },
-  {
-    icon: '/icons/tractor.svg',
-    title: 'Maa- ja metsätalouskoneet',
-    slug: 'maa-metsatalouskoneet',
-    href: '/maa-metsatalouskoneet',
-    subcategories: [
-      { icon: '/icons/tractor.svg', title: 'Traktorit', slug: SUBCATEGORY_SLUGS.traktorit, href: '/maa-metsatalouskoneet/traktorit' },
-      { icon: '/icons/tractor.svg', title: 'Puimurit', slug: SUBCATEGORY_SLUGS.puimurit, href: '/maa-metsatalouskoneet/puimurit' },
-      { icon: '/icons/tractor.svg', title: 'Muut maatalouskoneet', slug: SUBCATEGORY_SLUGS.muutmaatalouskoneet, href: '/maa-metsatalouskoneet/muut-maatalouskoneet' },
-      { icon: '/icons/tractor.svg', title: 'Traktorin lisälaitteet', slug: SUBCATEGORY_SLUGS.traktorinlisalaitteet, href: '/maa-metsatalouskoneet/traktorin-lisalaitteet' },
-      { icon: '/icons/tractor.svg', title: 'Traktorin perävaunut', slug: SUBCATEGORY_SLUGS.traktorinperavaunut, href: '/maa-metsatalouskoneet/traktorin-peravaunut' },
-      { icon: '/icons/tractor.svg', title: 'Metsätraktorit', slug: SUBCATEGORY_SLUGS.metsatraktorit, href: '/maa-metsatalouskoneet/metsatraktorit' },
-      { icon: '/icons/excavator.svg', title: 'Harvesterit', slug: SUBCATEGORY_SLUGS.harvesterit, href: '/maa-metsatalouskoneet/harvesterit' },
-      { icon: '/icons/excavator.svg', title: 'Muut metsäkoneet', slug: SUBCATEGORY_SLUGS.muutmetsakoneet, href: '/maa-metsatalouskoneet/muut-metsakoneet' },
-    ],
-  },
+  createMaatalouskoneetCategory(),
+  createMetsatalouskoneetCategory(),
   {
     icon: '/icons/excavator.svg',
     title: 'Maanrakennus',
-    slug: 'maanrakennus',
+    slug: CATEGORY_SLUGS.maanrakennus,
     href: '/maanrakennus',
     subcategories: [
       { icon: '/icons/excavator.svg', title: 'Kaivinkoneet', slug: SUBCATEGORY_SLUGS.kaivinkoneet, href: '/maanrakennus/kaivinkoneet' },
@@ -127,7 +169,7 @@ export const categories: Category[] = [
   {
     icon: '/icons/truck.svg',
     title: 'Kuorma-autot',
-    slug: 'kuorma-autot',
+    slug: CATEGORY_SLUGS.kuormaAutot,
     href: '/kuorma-autot',
     subcategories: [
       { icon: '/icons/truck.svg', title: 'Lavakuljetus', slug: SUBCATEGORY_SLUGS.lavakuljetus, href: '/kuorma-autot/lavakuljetus' },
@@ -143,25 +185,26 @@ export const categories: Category[] = [
       { icon: '/icons/truck.svg', title: 'Raskaat perävaunut', slug: SUBCATEGORY_SLUGS.raskaatperavaunut, href: '/kuorma-autot/raskaat-peravaunut' },
     ],
   },
+  createVeneetCategory(),
   {
     icon: '/icons/boat.svg',
     title: 'Muut ajoneuvot',
-    slug: 'muut-ajoneuvot',
+    slug: CATEGORY_SLUGS.muutAjoneuvot,
     href: '/muut-ajoneuvot',
     subcategories: [
-      { icon: '/icons/boat.svg', title: 'Veneet', slug: SUBCATEGORY_SLUGS.veneet, href: '/muut-ajoneuvot/veneet' },
       { icon: '/icons/forklift.svg', title: 'Trukit', slug: SUBCATEGORY_SLUGS.trukit, href: '/muut-ajoneuvot/trukit' },
       { icon: '/icons/boat.svg', title: 'Muut ajoneuvot', slug: SUBCATEGORY_SLUGS.muutajoneuvot, href: '/muut-ajoneuvot/muut-ajoneuvot' },
       { icon: '/icons/truck.svg', title: 'Muut perävaunut', slug: SUBCATEGORY_SLUGS.muutperavaunut, href: '/muut-ajoneuvot/muut-peravaunut' },
     ],
   },
+  createEmptyCategory(),
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
-  return categories.find(cat => cat.slug === slug);
+  return categories.find((cat) => cat.slug === slug);
 }
 
 export function getSubcategoryBySlug(categorySlug: string, subcategorySlug: string): Subcategory | undefined {
   const category = getCategoryBySlug(categorySlug);
-  return category?.subcategories.find(sub => sub.slug === subcategorySlug);
+  return category?.subcategories.find((sub) => sub.slug === subcategorySlug);
 }

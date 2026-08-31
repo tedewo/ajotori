@@ -54,14 +54,20 @@ export default function SelectSubcategoryPage() {
             <h2 className="text-lg font-semibold text-slate-900 mb-6">
               Vaihe 2: Valitse alaluokka
             </h2>
-            
-            <CategoryGrid 
-              categories={category.subcategories.map(sub => ({
-                icon: sub.icon,
-                title: sub.title,
-                href: `/ilmoitus/uusi/tiedot?category=${categorySlug}&subcategory=${sub.slug}`,
-              }))}
-            />
+
+            {category.subcategories.length > 0 ? (
+              <CategoryGrid 
+                categories={category.subcategories.map(sub => ({
+                  icon: sub.icon,
+                  title: sub.title,
+                  href: `/ilmoitus/uusi/tiedot?category=${categorySlug}&subcategory=${sub.slug}`,
+                }))}
+              />
+            ) : (
+              <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                Tähän pääkategoriaan ei ole vielä liitetty alaluokkia.
+              </div>
+            )}
           </div>
         </section>
 

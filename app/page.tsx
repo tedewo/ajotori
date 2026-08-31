@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { categories } from '@/lib/categories';
 
 export default function Home() {
   return (
@@ -50,20 +51,15 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-slate-900">Selaa ajoneuvoryhmiä</h2>
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { icon: '/icons/car.svg', title: 'Autot' },
-              { icon: '/icons/motorcycle.svg', title: 'Pienkoneet' },
-              { icon: '/icons/tractor.svg', title: 'Maatalouskoneet' },
-              { icon: '/icons/excavator.svg', title: 'Maanrakennuskoneet' },
-              { icon: '/icons/truck.svg', title: 'Kuorma-autot' },
-              { icon: '/icons/boat.svg', title: 'Muut ajoneuvot' },
-            ].map((cat) => (
-              <article key={cat.title} className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
-                <img src={cat.icon} alt="" className="h-12 w-12" />
-                <div>
-                  <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
-                </div>
-              </article>
+            {categories.map((cat) => (
+              <Link key={cat.slug} href={cat.href} className="block">
+                <article className="flex items-center gap-4 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md">
+                  <img src={cat.icon} alt="" className="h-12 w-12" />
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900">{cat.title}</h4>
+                  </div>
+                </article>
+              </Link>
             ))}
           </div>
 
