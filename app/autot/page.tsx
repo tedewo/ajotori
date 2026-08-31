@@ -1,15 +1,23 @@
+import Link from 'next/link';
 import CategoryPage from '../components/CategoryPage';
+import { categories } from '@/lib/categories';
 
 export default function AutotPage() {
-  const categories = [
-    { icon: '/icons/car.svg', title: 'Henkilöautot', href: '/autot/henkiloautot' },
-    { icon: '/icons/truck.svg', title: 'Pakettiautot', href: '/autot/pakettiautot' },
-    { icon: '/icons/car.svg', title: 'Matkailuautot', href: '/autot/matkailuautot' },
-    { icon: '/icons/truck.svg', title: 'Lava-autot', href: '/autot/lava-autot' },
-    { icon: '/icons/truck.svg', title: 'Kevyt kuorma-autot', href: '/autot/kevyet-kuorma-autot' },
-    { icon: '/icons/truck.svg', title: 'Auton perävaunut', href: '/autot/auton-peravaunut' },
-    { icon: '/icons/truck.svg', title: 'Mopoautot', href: '/autot/mopoautot' },
-  ];
+  const autoCategory = categories.find((category) => category.slug === 'autot');
+  const categoriesList = autoCategory?.subcategories.map((subcategory) => ({
+    icon: subcategory.icon,
+    title: subcategory.title,
+    href: `${subcategory.href}/ilmoitukset`,
+  })) ?? [];
 
-  return <CategoryPage title="Autot" categories={categories} />;
+  return (
+    <div>
+      <CategoryPage title="Autot" categories={categoriesList} />
+      <div className="mx-auto max-w-5xl px-4 pb-10 sm:px-6 lg:px-8">
+        <Link href="/ilmoitukset?category=autot" className="inline-flex rounded-full bg-[#0ea5e9] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0ca4dd]">
+          Selaa kaikkia autot-ilmoituksia
+        </Link>
+      </div>
+    </div>
+  );
 }

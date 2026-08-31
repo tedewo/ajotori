@@ -1,13 +1,23 @@
+import Link from 'next/link';
 import CategoryPage from '../components/CategoryPage';
-
-const categories = [
-  { icon: '/icons/tractor.svg', title: 'Traktorit', href: '/maatalouskoneet/traktorit' },
-  { icon: '/icons/tractor.svg', title: 'Puimurit', href: '/maatalouskoneet/puimurit' },
-  { icon: '/icons/tractor.svg', title: 'Muut maatalouskoneet', href: '/maatalouskoneet/muut-maatalouskoneet' },
-  { icon: '/icons/tractor.svg', title: 'Traktorin lisälaitteet', href: '/maatalouskoneet/traktorin-lisalaitteet' },
-  { icon: '/icons/tractor.svg', title: 'Traktorin perävaunut', href: '/maatalouskoneet/traktorin-peravaunut' },
-];
+import { categories } from '@/lib/categories';
 
 export default function MaatalouskoneetPage() {
-  return <CategoryPage title="Maatalouskoneet" categories={categories} />;
+  const category = categories.find((item) => item.slug === 'maatalouskoneet');
+  const categoriesList = category?.subcategories.map((subcategory) => ({
+    icon: subcategory.icon,
+    title: subcategory.title,
+    href: `${subcategory.href}/ilmoitukset`,
+  })) ?? [];
+
+  return (
+    <div>
+      <CategoryPage title="Maatalouskoneet" categories={categoriesList} />
+      <div className="mx-auto max-w-5xl px-4 pb-10 sm:px-6 lg:px-8">
+        <Link href="/ilmoitukset?category=maatalouskoneet" className="inline-flex rounded-full bg-[#0ea5e9] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0ca4dd]">
+          Selaa kaikkia maatalouskoneilmoituksia
+        </Link>
+      </div>
+    </div>
+  );
 }
