@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import CreateListingHeader from '@/app/components/CreateListingHeader';
+import { createBrowserClient, hasSupabaseConfig } from '@/lib/supabase/client';
 import { getCategoryBySlug, getSubcategoryBySlug } from '@/lib/categories';
 import { getFormConfigBySlug } from '@/lib/formConfig';
 import SectionCard from '@/app/components/form/SectionCard';
@@ -23,6 +24,7 @@ const MAX_IMAGE_SIZE_MB = 10;
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 function CreateListingDetailsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const categorySlug = searchParams.get('category') ?? '';
   const subcategorySlug = searchParams.get('subcategory') ?? '';
@@ -54,6 +56,8 @@ function CreateListingDetailsContent() {
 
   const [formData, setFormData] = useState<Record<string, any>>(initialValues);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState('');
   const [activeSectionKey, setActiveSectionKey] = useState(formConfig?.sections[0]?.key ?? '');
 
@@ -135,8 +139,12 @@ function CreateListingDetailsContent() {
     setFormData((p) => ({ ...p, images: (p.images ?? []).filter((_: any, i: number) => i !== index) }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const isFormValid = event.currentTarget.reportValidity();
     if (!isFormValid) {
@@ -144,17 +152,74 @@ function CreateListingDetailsContent() {
     }
 
     if (!formData.province) {
-      setSubmitMessage('Maakunta on pakollinen.');
+      setSubmitError('Maakunta on pakollinen.');
+      setSubmitMessage('');
       return;
     }
 
     if (!formData.municipality) {
-      setSubmitMessage('Kaupunki / kunta on pakollinen.');
+      setSubmitError('Kaupunki / kunta on pakollinen.');
+      setSubmitMessage('');
       return;
     }
 
-    console.log('Ilmoitustiedot:', formData);
-    setSubmitMessage('Ilmoituksen tallennus toteutetaan seuraavassa vaiheessa.');
+    if (!hasSupabaseConfig()) {
+      setSubmitError('Supabase-määritykset puuttuvat. Lisää NEXT_PUBLIC_SUPABASE_URL ja NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY .env-tiedostoon.');
+      setSubmitMessage('');
+      return;
+    }
+
+    const supabase = createBrowserClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      setSubmitError('Et ole kirjautunut. Kirjaudu sisään jatkaaksesi.');
+      setSubmitMessage('');
+      router.push('/auth/sign-in');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+    setSubmitMessage('Tallennetaan ilmoitusta luonnoksena...');
+
+    try {
+      const payload = {
+        ...formData,
+        category_slug: categorySlug,
+        subcategory_slug: subcategorySlug,
+        title: formData.title || createGeneratedTitle(formData),
+        region: formData.province,
+        municipality: formData.municipality,
+        description: formData.details ?? formData.description ?? '',
+        seller_type: formData.sellerType ?? 'private',
+        external_listing_url: formData.externalListingUrl ?? null,
+      };
+
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string; listingId?: string; status?: string };
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Tallennus epäonnistui.');
+      }
+
+      setSubmitMessage('Ilmoitus on tallennettu luonnoksena.');
+      setSubmitError('');
+      setTimeout(() => {
+        router.push('/account');
+      }, 800);
+    } catch (error) {
+      console.error('Listing save failed:', error);
+      setSubmitError(error instanceof Error && error.message ? error.message : 'Ilmoituksen tallennus epäonnistui. Yritä uudelleen.');
+      setSubmitMessage('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!category || !subcategory) {
@@ -322,10 +387,13 @@ function CreateListingDetailsContent() {
             ))}
 
             <div className="flex flex-col gap-4 pt-6 sm:flex-row">
-              <button type="submit" className="flex-1 rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd]">Julkaise ilmoitus</button>
+              <button type="submit" disabled={isSubmitting} className="flex-1 rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd] disabled:cursor-not-allowed disabled:opacity-60">
+                {isSubmitting ? 'Tallennetaan...' : 'Tallenna luonnos'}
+              </button>
               <Link href="/ilmoitus/uusi" className="flex-1 rounded-[28px] border border-slate-300 px-6 py-3 text-center font-semibold text-slate-900 hover:bg-slate-50">Peruuta</Link>
             </div>
             {submitMessage ? (<div className="rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">{submitMessage}</div>) : null}
+            {submitError ? (<div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div>) : null}
           </form>
         </div>
       </section>

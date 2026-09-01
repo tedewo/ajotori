@@ -164,7 +164,7 @@ on public.listings
 for insert
 with check (
   auth.uid() = seller_id
-  and seller_type = 'private'
+  and seller_type in ('private', 'company')
 );
 
 create policy "Users can update own listings"

@@ -14,8 +14,26 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Insert: {
+          id?: string;
+          seller_type?: 'private' | 'company';
+          display_name?: string | null;
+          company_name?: string | null;
+          website_url?: string | null;
+          role?: 'user' | 'admin';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          seller_type: 'private' | 'company';
+          display_name: string | null;
+          company_name: string | null;
+          website_url: string | null;
+          role: 'user' | 'admin';
+          created_at: string;
+          updated_at: string;
+        }>;
       };
       listings: {
         Row: {
@@ -39,8 +57,48 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Insert: {
+          id?: string;
+          seller_id?: string;
+          category_slug?: string | null;
+          subcategory_slug?: string | null;
+          title?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          year?: number | null;
+          price?: number | null;
+          description?: string | null;
+          region?: string | null;
+          municipality?: string | null;
+          seller_type?: 'private' | 'company';
+          external_listing_url?: string | null;
+          status?: 'draft' | 'published' | 'sold' | 'removed';
+          technical_data?: Record<string, unknown> | null;
+          equipment?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          seller_id: string;
+          category_slug: string | null;
+          subcategory_slug: string | null;
+          title: string | null;
+          brand: string | null;
+          model: string | null;
+          year: number | null;
+          price: number | null;
+          description: string | null;
+          region: string | null;
+          municipality: string | null;
+          seller_type: 'private' | 'company';
+          external_listing_url: string | null;
+          status: 'draft' | 'published' | 'sold' | 'removed';
+          technical_data: Record<string, unknown> | null;
+          equipment: string[] | null;
+          created_at: string;
+          updated_at: string;
+        }>;
       };
       listing_images: {
         Row: {
@@ -50,8 +108,20 @@ export type Database = {
           sort_order: number;
           created_at: string;
         };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Insert: {
+          id?: string;
+          listing_id?: string;
+          storage_path?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          listing_id: string;
+          storage_path: string;
+          sort_order: number;
+          created_at: string;
+        }>;
       };
     };
   };
