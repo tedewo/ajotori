@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
+import { AuthNav } from '@/components/auth/AuthNav';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,10 +27,7 @@ export default function RootLayout({
                 <p className="text-sm text-slate-500 hidden sm:block">Myy ja löydä ajoneuvot helposti</p>
               </div>
 
-              <nav className="flex items-center gap-5">
-                <a href="#" className="text-sm text-slate-700 hover:text-[#0ea5e9]">Luo tili</a>
-                <a href="#" className="ml-2 rounded-full bg-[#0ea5e9] px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#0ca4dd]">Kirjaudu sisään</a>
-              </nav>
+              <AuthNav />
             </div>
           </div>
         </header>
