@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import type { Database } from '@/lib/supabase/client';
-import { createServerClient, getCurrentUser } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 
 const DEFAULT_EXCLUDED_KEYS = new Set([
   'category',
@@ -75,7 +75,26 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: userData, error: authError } = await getCurrentUser();
+  const supabase = await createServerClient();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    const authDiagnosticError = authError as typeof authError & {
+      details?: string;
+      hint?: string;
+    };
+    console.error('Supabase auth.getUser failed in listing API:', {
+      code: authDiagnosticError.code,
+      message: authDiagnosticError.message,
+      details: authDiagnosticError.details,
+      hint: authDiagnosticError.hint,
+    });
+  } else {
+    console.info('Supabase auth.getUser result in listing API:', {
+      hasUser: Boolean(userData.user),
+      userId: userData.user?.id ?? null,
+    });
+  }
 
   if (authError || !userData.user) {
     return NextResponse.json({ error: 'Kirjaudu sisään jatkaaksesi.' }, { status: 401 });
@@ -108,19 +127,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Hinta on pakollinen ja sen tulee olla suurempi kuin nolla.' }, { status: 400 });
   }
 
-  const supabase = await createServerClient();
   const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .select('seller_type')
     .eq('id', userData.user.id)
-    .single();
+    .maybeSingle();
 
-  if (profileError || !profileData) {
-    console.error('Failed to fetch profile for listing insert:', profileError);
-    return NextResponse.json({ error: 'Käyttäjäprofiilia ei löytynyt.' }, { status: 401 });
+  if (profileError) {
+    console.error('Failed to fetch profile for listing insert:', {
+      code: profileError.code,
+      message: profileError.message,
+      details: profileError.details,
+      hint: profileError.hint,
+      userId: userData.user.id,
+    });
+    return NextResponse.json({ error: 'Profiilin tarkistus epäonnistui. Yritä uudelleen.' }, { status: 500 });
+  }
+
+  if (!profileData) {
+    console.error('Profiles query returned no visible row in listing API:', {
+      userId: userData.user.id,
+      query: 'profiles.select(seller_type).eq(id, auth.getUser().data.user.id).maybeSingle()',
+    });
+    return NextResponse.json({ error: 'Käyttäjäprofiili puuttuu. Ota yhteyttä ylläpitoon.' }, { status: 409 });
   }
 
   const profileRow = profileData as { seller_type?: string | null } | null;
+  console.info('Profiles query succeeded in listing API:', {
+    userId: userData.user.id,
+    hasProfile: true,
+    sellerType: profileRow?.seller_type ?? null,
+  });
+
   const sellerType: 'private' | 'company' = profileRow?.seller_type === 'company' ? 'company' : 'private';
   const equipment = Array.isArray(payload.equipment) ? payload.equipment.filter((item) => typeof item === 'string') : [];
   const description = normaliseText(payload.description) ?? normaliseText(payload.details) ?? '';
