@@ -4,7 +4,7 @@ import { formatMileage, formatPrice } from '@/lib/listings';
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const primaryImage = listing.images?.[0] ?? '/icons/car.svg';
-  const location = [listing.province, listing.municipality].filter(Boolean).join(', ');
+  const location = listing.municipality;
   const details = [
     listing.mileage ? formatMileage(listing.mileage) : null,
     listing.powerSource || null,

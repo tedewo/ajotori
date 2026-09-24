@@ -4,7 +4,7 @@ import ListingIndexPage from '@/app/ilmoitukset/page';
 export default function TraktoritListingsPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#f8fafc]" />}>
-      <ListingIndexPage />
+      <ListingIndexPage initialCategory="maatalouskoneet" initialSubcategory="traktorit" />
     </Suspense>
   );
 }

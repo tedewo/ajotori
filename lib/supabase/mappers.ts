@@ -23,6 +23,14 @@ export interface SupabaseListingRow {
 }
 
 export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow): Listing {
+  const technicalData = row.technical_data ?? {};
+  const technicalSpecs = Object.fromEntries(
+    Object.entries(technicalData).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)).map(([key, value]) => [key, String(value)]),
+  );
+  const mileageValue = technicalData.mileage;
+  const transmissionValue = technicalData.transmission;
+  const powerSourceValue = technicalData.fuel;
+
   return {
     id: row.id,
     category: row.category_slug ?? '',
@@ -35,14 +43,15 @@ export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow): Lis
     province: row.region ?? '',
     municipality: row.municipality ?? '',
     description: row.description ?? '',
-    technicalSpecs: (row.technical_data as Record<string, string>) ?? {},
+    technicalSpecs,
+    mileage: typeof mileageValue === 'number' ? mileageValue : undefined,
     features: row.equipment ?? [],
     sellerType: row.seller_type ?? 'private',
     sellerName: '',
     externalListingUrl: row.external_listing_url ?? undefined,
     createdAt: row.created_at ?? new Date().toISOString(),
     images: [],
-    powerSource: '',
-    transmission: '',
+    powerSource: typeof powerSourceValue === 'string' ? powerSourceValue : '',
+    transmission: typeof transmissionValue === 'string' ? transmissionValue : '',
   };
 }

@@ -5,7 +5,7 @@ export default function ListingGrid({ listings }: { listings: Listing[] }) {
   if (!listings.length) {
     return (
       <div className="rounded-[28px] border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
-        Ei hakuehtojen mukaisia ilmoituksia.
+        Ei julkaistuja ilmoituksia vielä.
       </div>
     );
   }

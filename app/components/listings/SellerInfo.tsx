@@ -9,7 +9,7 @@ export default function SellerInfo({ listing }: { listing: Listing }) {
 
       <div className="mt-5 space-y-3 text-sm text-slate-700">
         <p>
-          <span className="font-medium text-slate-900">Myyjä:</span> {listing.sellerName}
+          <span className="font-medium text-slate-900">Myyjä:</span> {listing.sellerName || 'Ei ilmoitettu'}
         </p>
 
         {isCompany && (
