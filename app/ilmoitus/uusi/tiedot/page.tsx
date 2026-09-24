@@ -19,7 +19,7 @@ import LocationSelector from '@/app/components/form/LocationSelector';
 import ContactInformation from '@/app/components/form/ContactInformation';
 import SmartTextField from '@/app/components/form/SmartTextField';
 
-const MAX_IMAGES = 6;
+const MAX_IMAGES = 20;
 const MAX_IMAGE_SIZE_MB = 10;
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
@@ -59,6 +59,8 @@ function CreateListingDetailsContent() {
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string }>>([]);
   const [activeSectionKey, setActiveSectionKey] = useState(formConfig?.sections[0]?.key ?? '');
 
   useEffect(() => {
@@ -139,6 +141,35 @@ function CreateListingDetailsContent() {
     setFormData((p) => ({ ...p, images: (p.images ?? []).filter((_: any, i: number) => i !== index) }));
   };
 
+  const uploadImages = async (listingId: string, files: File[]) => {
+    const body = new FormData();
+    files.forEach((file) => body.append('files', file));
+
+    const response = await fetch(`/api/listings/${listingId}/images`, { method: 'POST', body });
+    const result = (await response.json().catch(() => ({ error: 'Kuvien lataus epäonnistui.' }))) as {
+      error?: string;
+      uploadedImages?: Array<{ id: string; url: string }>;
+    };
+
+    if (!response.ok) throw new Error(result.error || 'Kuvien lataus epäonnistui.');
+    setUploadedImages((current) => [...current, ...(result.uploadedImages ?? [])]);
+  };
+
+  const handleRemoveUploadedImage = async (imageId: string) => {
+    setImageError('');
+    const response = await fetch(`/api/listings/${createdListingId}/images`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageId }),
+    });
+    const result = (await response.json().catch(() => ({ error: 'Kuvan poistaminen epäonnistui.' }))) as { error?: string };
+    if (!response.ok) {
+      setImageError(result.error || 'Kuvan poistaminen epäonnistui.');
+      return;
+    }
+    setUploadedImages((current) => current.filter((image) => image.id !== imageId));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -184,35 +215,45 @@ function CreateListingDetailsContent() {
     setSubmitMessage('Tallennetaan ilmoitusta luonnoksena...');
 
     try {
-      const payload = {
-        ...formData,
-        category_slug: categorySlug,
-        subcategory_slug: subcategorySlug,
-        title: formData.title || createGeneratedTitle(formData),
-        region: formData.province,
-        municipality: formData.municipality,
-        description: formData.details ?? formData.description ?? '',
-        seller_type: formData.sellerType ?? 'private',
-        external_listing_url: formData.externalListingUrl ?? null,
-      };
+      let listingId = createdListingId;
+      if (!listingId) {
+        const payload = {
+          ...formData,
+          category_slug: categorySlug,
+          subcategory_slug: subcategorySlug,
+          title: formData.title || createGeneratedTitle(formData),
+          region: formData.province,
+          municipality: formData.municipality,
+          description: formData.details ?? formData.description ?? '',
+          seller_type: formData.sellerType ?? 'private',
+          external_listing_url: formData.externalListingUrl ?? null,
+        };
 
-      const response = await fetch('/api/listings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string; listingId?: string; status?: string };
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Tallennus epäonnistui.');
+        const response = await fetch('/api/listings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string; listingId?: string };
+        if (!response.ok || !result.listingId) throw new Error(result.error || 'Tallennus epäonnistui.');
+        listingId = result.listingId;
+        setCreatedListingId(listingId);
       }
 
-      setSubmitMessage('Ilmoitus on tallennettu luonnoksena.');
+      const files = formData.images ?? [];
+      if (files.length > 0) {
+        setSubmitMessage('Luonnos tallennettu. Ladataan kuvia...');
+        await uploadImages(listingId, files);
+        setFormData((current) => ({ ...current, images: [] }));
+      }
+
+      setSubmitMessage(files.length > 0 ? 'Ilmoitus ja kuvat on tallennettu luonnoksena.' : 'Ilmoitus on tallennettu luonnoksena.');
       setSubmitError('');
-      setTimeout(() => {
-        router.push('/account');
-      }, 800);
+      if (files.length === 0) {
+        setTimeout(() => {
+          router.push('/account');
+        }, 800);
+      }
     } catch (error) {
       console.error('Listing save failed:', error);
       setSubmitError(error instanceof Error && error.message ? error.message : 'Ilmoituksen tallennus epäonnistui. Yritä uudelleen.');
@@ -365,7 +406,7 @@ function CreateListingDetailsContent() {
                         case 'textarea':
                           return <Textarea key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} />;
                         case 'image':
-                          return <ImageUpload key={field.key} images={formData.images ?? []} onAdd={handleAddImages} onRemove={handleRemoveImage} onReorder={handleReorderImages} error={imageError} />;
+                          return <ImageUpload key={field.key} images={formData.images ?? []} uploadedImages={uploadedImages} onAdd={handleAddImages} onRemove={handleRemoveImage} onRemoveUploaded={createdListingId ? handleRemoveUploadedImage : undefined} onReorder={handleReorderImages} error={imageError} />;
                         case 'location':
                           return <LocationSelector key={field.key} province={formData.province ?? ''} municipality={formData.municipality ?? ''} onProvince={handleChange('province')} onMunicipality={handleChange('municipality')} />;
                         case 'contact':

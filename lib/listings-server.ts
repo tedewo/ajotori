@@ -45,9 +45,13 @@ async function getListingImages(listingIds: string[]) {
 
   const imagesByListing = new Map<string, string[]>();
   for (const image of (data as ListingImageRow[]) ?? []) {
-    const { data: publicUrl } = supabase.storage.from('listings').getPublicUrl(image.storage_path);
+    const { data: signedUrl, error: signedUrlError } = await supabase.storage
+      .from('listings')
+      .createSignedUrl(image.storage_path, 3600);
+    if (signedUrlError || !signedUrl) continue;
+
     const images = imagesByListing.get(image.listing_id) ?? [];
-    images.push(publicUrl.publicUrl);
+    images.push(signedUrl.signedUrl);
     imagesByListing.set(image.listing_id, images);
   }
   return imagesByListing;

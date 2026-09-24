@@ -4,8 +4,10 @@ import React, { useRef } from 'react';
 
 type Props = {
   images: File[];
+  uploadedImages?: Array<{ id: string; url: string }>;
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
+  onRemoveUploaded?: (id: string) => void;
   onReorder?: (from: number, to: number) => void;
   max?: number;
   maxMb?: number;
@@ -14,7 +16,7 @@ type Props = {
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export default function ImageUpload({ images, onAdd, onRemove, onReorder, max = 6, maxMb = 10, error }: Props) {
+export default function ImageUpload({ images, uploadedImages = [], onAdd, onRemove, onRemoveUploaded, onReorder, max = 6, maxMb = 10, error }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFiles = (files: File[]) => {
@@ -107,6 +109,20 @@ export default function ImageUpload({ images, onAdd, onRemove, onReorder, max = 
           );
         })}
       </div>
+
+      {uploadedImages.length > 0 ? (
+        <div className="mt-5">
+          <p className="text-sm font-medium text-slate-700">Tallennetut kuvat</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {uploadedImages.map((image, index) => (
+              <div key={image.id} className="relative rounded-lg border border-emerald-200 bg-emerald-50 p-2">
+                <img src={image.url} alt={`Tallennettu kuva ${index + 1}`} className="h-24 w-full rounded-md object-cover" />
+                <button type="button" onClick={() => onRemoveUploaded?.(image.id)} className="mt-2 text-sm text-red-600">Poista</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
