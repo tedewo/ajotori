@@ -18,6 +18,7 @@ import ImageUpload from '@/app/components/form/ImageUpload';
 import LocationSelector from '@/app/components/form/LocationSelector';
 import ContactInformation from '@/app/components/form/ContactInformation';
 import SmartTextField from '@/app/components/form/SmartTextField';
+import PublishListingButton from '@/app/components/listings/PublishListingButton';
 
 const MAX_IMAGES = 20;
 const MAX_IMAGE_SIZE_MB = 10;
@@ -170,6 +171,25 @@ function CreateListingDetailsContent() {
     setUploadedImages((current) => current.filter((image) => image.id !== imageId));
   };
 
+  const publishValidationMessage = (() => {
+    if (!createdListingId) return 'Tallenna luonnos ensin.';
+    if (uploadedImages.length === 0) return 'Lisää vähintään yksi kuva ennen julkaisemista.';
+    if (!String(formData.title ?? '').trim()) return 'Täydennä ilmoitukselle otsikko.';
+    if (!categorySlug || !subcategorySlug) return 'Täydennä ilmoituksen kategoria.';
+    if (!formData.province) return 'Maakunta on pakollinen.';
+    if (!formData.municipality) return 'Kaupunki / kunta on pakollinen.';
+
+    const requiredFields = formConfig?.sections.flatMap((section) => section.fields.filter((field) => field.required)) ?? [];
+    const missingField = requiredFields.find((field) => {
+      const value = formData[field.key];
+      if (field.key === 'price') return !Number.isFinite(Number(value)) || Number(value) <= 0;
+      if (Array.isArray(value)) return value.length === 0;
+      return value === null || value === undefined || String(value).trim() === '';
+    });
+
+    return missingField ? `${missingField.label} on pakollinen.` : '';
+  })();
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -249,11 +269,6 @@ function CreateListingDetailsContent() {
 
       setSubmitMessage(files.length > 0 ? 'Ilmoitus ja kuvat on tallennettu luonnoksena.' : 'Ilmoitus on tallennettu luonnoksena.');
       setSubmitError('');
-      if (files.length === 0) {
-        setTimeout(() => {
-          router.push('/account');
-        }, 800);
-      }
     } catch (error) {
       console.error('Listing save failed:', error);
       setSubmitError(error instanceof Error && error.message ? error.message : 'Ilmoituksen tallennus epäonnistui. Yritä uudelleen.');
@@ -431,6 +446,13 @@ function CreateListingDetailsContent() {
               <button type="submit" disabled={isSubmitting} className="flex-1 rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd] disabled:cursor-not-allowed disabled:opacity-60">
                 {isSubmitting ? 'Tallennetaan...' : 'Tallenna luonnos'}
               </button>
+              {createdListingId ? (
+                <PublishListingButton
+                  listingId={createdListingId}
+                  disabled={Boolean(publishValidationMessage) || isSubmitting}
+                  disabledMessage={publishValidationMessage}
+                />
+              ) : null}
               <Link href="/ilmoitus/uusi" className="flex-1 rounded-[28px] border border-slate-300 px-6 py-3 text-center font-semibold text-slate-900 hover:bg-slate-50">Peruuta</Link>
             </div>
             {submitMessage ? (<div className="rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">{submitMessage}</div>) : null}

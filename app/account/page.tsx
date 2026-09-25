@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createServerClient, getCurrentUser } from '@/lib/supabase/server';
 import { mapSupabaseListingToAjotoriListing, type SupabaseListingRow } from '@/lib/supabase/mappers';
 import { formatPrice } from '@/lib/listings';
+import PublishListingButton from '@/app/components/listings/PublishListingButton';
 
 type AccountProfile = {
   display_name?: string | null;
@@ -61,7 +62,10 @@ export default async function AccountPage() {
     .eq('seller_id', data.user.id)
     .order('created_at', { ascending: false });
 
-  const ownListings = (listingData as SupabaseListingRow[] | null ?? []).map(mapSupabaseListingToAjotoriListing);
+  const ownListings = (listingData as SupabaseListingRow[] | null ?? []).map((row) => ({
+    ...mapSupabaseListingToAjotoriListing(row),
+    status: row.status ?? 'draft',
+  }));
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
@@ -122,9 +126,14 @@ export default async function AccountPage() {
                     {listing.price ? ` · ${formatPrice(listing.price)}` : ''}
                   </p>
                 </div>
-                <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                  Luonnos
-                </span>
+                {listing.status === 'draft' ? <PublishListingButton listingId={listing.id} /> : null}
+                {listing.status === 'published' ? (
+                  <Link href={`/ilmoitukset/${listing.id}`} className="text-sm font-semibold text-[#0ea5e9] hover:text-[#0ca4dd]">
+                    Avaa julkaistu ilmoitus
+                  </Link>
+                ) : null}
+                {listing.status === 'sold' ? <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Myyty</span> : null}
+                {listing.status === 'removed' ? <span className="w-fit rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Poistettu</span> : null}
               </div>
             ))}
           </div>
