@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import CreateListingHeader from '@/app/components/CreateListingHeader';
 import { createBrowserClient, hasSupabaseConfig } from '@/lib/supabase/client';
 import { getCategoryBySlug, getSubcategoryBySlug } from '@/lib/categories';
-import { getFormConfigBySlug } from '@/lib/formConfig';
+import { getFormConfigBySlug, POWER_UNIT_OPTIONS } from '@/lib/formConfig';
 import SectionCard from '@/app/components/form/SectionCard';
 import TextField from '@/app/components/form/TextField';
 import NumberField from '@/app/components/form/NumberField';
@@ -83,7 +83,10 @@ function CreateListingDetailsContent() {
     }
 
     setFormData((p) => {
-      const next = { ...p, [key]: value };
+      const fieldValue = key === 'engineSize' && value !== ''
+        ? Number(String(value).replace(/\s*l$/, ''))
+        : value;
+      const next = { ...p, [key]: fieldValue };
       const brand = typeof next.brand === 'string' ? next.brand.trim() : '';
       const model = typeof next.model === 'string' ? next.model.trim() : '';
       const year = typeof next.year === 'string' || typeof next.year === 'number' ? String(next.year).trim() : '';
@@ -360,8 +363,7 @@ function CreateListingDetailsContent() {
                                     onChange={(e) => handlePowerUnitChange(e.target.value)}
                                     className="rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
                                   >
-                                    <option value="kW">kW</option>
-                                    <option value="hv">hv</option>
+                                    {POWER_UNIT_OPTIONS.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
                                   </select>
                                 </div>
                                 {formData.power ? (
@@ -401,7 +403,10 @@ function CreateListingDetailsContent() {
                               </div>
                             );
                           }
-                          return <SelectField key={field.key} id={field.key} label={field.label} value={String(formData[field.key] ?? '')} onChange={handleChange(field.key)} options={field.options ?? []} />;
+                          const selectedValue = field.key === 'engineSize' && formData.engineSize !== ''
+                            ? `${Number(formData.engineSize).toFixed(1)} l`
+                            : String(formData[field.key] ?? '');
+                          return <SelectField key={field.key} id={field.key} label={field.label} value={selectedValue} onChange={handleChange(field.key)} options={field.options ?? []} />;
                         case 'radio':
                           return (
                             <div key={field.key}>
