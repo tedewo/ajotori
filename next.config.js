@@ -13,7 +13,6 @@ const nextConfig = {
       { source: '/maa-metsatalouskoneet/harvesterit', destination: '/metsatalouskoneet/harvesterit', permanent: true },
       { source: '/maa-metsatalouskoneet/muut-metsakoneet', destination: '/metsatalouskoneet/muut-metsakoneet', permanent: true },
       { source: '/muut-ajoneuvot/veneet', destination: '/veneet/veneet', permanent: true },
-      { source: '/muut-ajoneuvot', destination: '/muut-ajoneuvot', permanent: true },
     ];
   },
 };

@@ -1,10 +1,5 @@
+import SubcategoryRedirect from "@/app/components/SubcategoryRedirect";
+
 export default function LavaAutot() {
-  return (
-    <main className="min-h-screen">
-      <div className="mx-auto container-center py-10">
-        <h1 className="text-2xl font-semibold">Lava-autot</h1>
-        <p className="mt-4 text-sm text-slate-600">Tämä sivu on paikkamerkki kategoriassa Lava-autot.</p>
-      </div>
-    </main>
-  );
+  return <SubcategoryRedirect categorySlug="autot" subcategorySlug="lava-autot" />;
 }
