@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import ListingIndexPage from '@/app/ilmoitukset/page';
+import ListingIndexContent from '@/app/ilmoitukset/ListingIndexContent';
 
 export default function VeneetListingsPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#f8fafc]" />}>
-      <ListingIndexPage initialCategory="veneet" initialSubcategory="veneet" />
+      <ListingIndexContent initialCategory="veneet" initialSubcategory="veneet" />
     </Suspense>
   );
 }

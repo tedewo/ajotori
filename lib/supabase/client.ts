@@ -34,6 +34,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
         }>;
+        Relationships: [];
       };
       listings: {
         Row: {
@@ -99,6 +100,15 @@ export type Database = {
           created_at: string;
           updated_at: string;
         }>;
+        Relationships: [
+          {
+            foreignKeyName: 'listings_seller_id_fkey';
+            columns: ['seller_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       listing_images: {
         Row: {
@@ -122,6 +132,22 @@ export type Database = {
           sort_order: number;
           created_at: string;
         }>;
+        Relationships: [
+          {
+            foreignKeyName: 'listing_images_listing_id_fkey';
+            columns: ['listing_id'];
+            isOneToOne: false;
+            referencedRelation: 'listings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+    };
+    Views: {};
+    Functions: {
+      get_published_listing_seller_display_name: {
+        Args: { p_listing_id: string };
+        Returns: string | null;
       };
     };
   };

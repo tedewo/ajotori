@@ -46,6 +46,18 @@ export type FormConfig = {
   sections: Section[];
 };
 
+const COMMON_MOTOR_VEHICLE_FIELDS: Field[] = [
+  { key: 'transmission', label: 'Vaihteisto', type: 'select', options: TRANSMISSION_OPTIONS },
+  { key: 'drivetrain', label: 'Vetotapa', type: 'select', options: DRIVETRAIN_OPTIONS },
+  { key: 'fuel', label: 'Käyttövoima', type: 'select', options: FUEL_OPTIONS },
+  { key: 'power', label: 'Teho', type: 'number' },
+];
+
+const COMMON_ENGINE_VEHICLE_FIELDS: Field[] = [
+  { key: 'engineSize', label: 'Moottorin koko', type: 'select', options: ENGINE_SIZE_OPTIONS },
+  ...COMMON_MOTOR_VEHICLE_FIELDS,
+];
+
 export const FORM_CONFIGS: FormConfig[] = [
   {
     slug: SUBCATEGORY_SLUGS.pakettiautot,
@@ -187,8 +199,41 @@ export const FORM_CONFIGS: FormConfig[] = [
   createMachineFormConfig(SUBCATEGORY_SLUGS.harvesterit, 'Harvesteri'),
   createMachineFormConfig(SUBCATEGORY_SLUGS.muutmaatalouskoneet, 'Muu maatalouskone'),
   createMachineFormConfig(SUBCATEGORY_SLUGS.muutmetsakoneet, 'Muu metsäkone'),
-
-
+  createBasicFormConfig(SUBCATEGORY_SLUGS.matkailuautot, 'Matkailuauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.lavaautot, 'Lava-auto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kevyetkuormaautot, 'Kevyt kuorma-auto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.autonperavaunut, 'Auton perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.mopoautot, 'Mopoauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.moottoripyorat, 'Moottoripyörä', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.mopot, 'Mopo', COMMON_MOTOR_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.skootterit, 'Skootteri', COMMON_MOTOR_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.monkijat, 'Mönkijä', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.moottorikelkat, 'Moottorikelkka', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.ruohonleikkurit, 'Ruohonleikkuri'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muutpienkoneet, 'Muu pienkone'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.pienkoneidenperavaunut, 'Pienkoneen perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.traktorinlisalaitteet, 'Traktorin lisälaite'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.traktorinperavaunut, 'Traktorin perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kurrottajat, 'Kurottaja'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.pyorakuormaajat, 'Pyöräkuormaaja'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.tienhoito, 'Tienhoitokalusto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.nosturit, 'Nosturi'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muutmaanrakennuslaitteet, 'Muu maanrakennuslaite'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.maanrakennuslaitteidenperavaunut, 'Maanrakennuslaitteen perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.lavakuljetus, 'Lavakuljetusauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.lavetit, 'Lavetti'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.puukuljetus, 'Puukuljetusauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.maansiirto, 'Maansiirtoauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kappaletavara, 'Kappaletavara-auto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kylmakuljetus, 'Kylmäkuljetusauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.hinaus, 'Hinausauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.veturit, 'Vetoauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.linjaautot, 'Linja-auto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muukuljetuskalusto, 'Muu kuljetuskalusto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.raskaatperavaunut, 'Raskas perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.trukit, 'Trukki'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muutajoneuvot, 'Muu ajoneuvo'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muutperavaunut, 'Muu perävaunu'),
 ];
 
 function createMachineFormConfig(slug: string, title: string): FormConfig {
@@ -217,6 +262,32 @@ function createMachineFormConfig(slug: string, title: string): FormConfig {
           { key: 'fuel', label: 'Käyttövoima', type: 'select', options: FUEL_OPTIONS },
         ],
       },
+      { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
+      { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
+      { key: 'location', title: 'Sijainti', fields: [{ key: 'location', label: 'Sijainti', type: 'location' }] },
+      { key: 'contact', title: 'Yhteystiedot', fields: [{ key: 'contact', label: 'Yhteystiedot', type: 'contact' }] },
+    ],
+  };
+}
+
+function createBasicFormConfig(slug: string, title: string, technicalFields: Field[] = []): FormConfig {
+  return {
+    slug,
+    title,
+    sections: [
+      {
+        key: 'basic',
+        title: 'Perustiedot',
+        fields: [
+          { key: 'brand', label: 'Merkki / valmistaja', type: 'brand', placeholder: 'Esim. Toyota' },
+          { key: 'model', label: 'Malli / tuotteen nimi', type: 'model', required: true },
+          { key: 'year', label: 'Vuosimalli', type: 'number' },
+          { key: 'price', label: 'Hinta (€)', type: 'number', required: true },
+        ],
+      },
+      ...(technicalFields.length > 0
+        ? [{ key: 'technical', title: 'Tekniset tiedot', fields: technicalFields }]
+        : []),
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
       { key: 'location', title: 'Sijainti', fields: [{ key: 'location', label: 'Sijainti', type: 'location' }] },

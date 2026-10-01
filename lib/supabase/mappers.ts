@@ -22,7 +22,7 @@ export interface SupabaseListingRow {
   updated_at?: string | null;
 }
 
-export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow): Listing {
+export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow, sellerDisplayName: string | null = null): Listing {
   const technicalData = row.technical_data ?? {};
   const technicalSpecs = Object.fromEntries(
     Object.entries(technicalData).filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value)).map(([key, value]) => [key, String(value)]),
@@ -47,7 +47,7 @@ export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow): Lis
     mileage: typeof mileageValue === 'number' ? mileageValue : undefined,
     features: row.equipment ?? [],
     sellerType: row.seller_type ?? 'private',
-    sellerName: '',
+    sellerName: sellerDisplayName?.trim() ?? '',
     externalListingUrl: row.external_listing_url ?? undefined,
     createdAt: row.created_at ?? new Date().toISOString(),
     images: [],

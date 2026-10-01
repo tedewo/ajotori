@@ -57,10 +57,32 @@ async function getListingImages(listingIds: string[]) {
   return imagesByListing;
 }
 
-async function mapPublishedListings(rows: SupabaseListingRow[]): Promise<Listing[]> {
-  const imagesByListing = await getListingImages(rows.map((row) => row.id));
-  return rows.map((row) => ({
-    ...mapSupabaseListingToAjotoriListing(row),
+async function getSellerDisplayNames(rows: SupabaseListingRow[]): Promise<string[]> {
+  if (rows.length === 0) return [];
+
+  const supabase = await createServerClient();
+  return Promise.all(rows.map(async (row) => {
+    const { data, error } = await supabase.rpc('get_published_listing_seller_display_name', {
+      p_listing_id: row.id,
+    });
+
+    if (error) {
+      console.error('Published listing seller name query failed:', error.message);
+      return '';
+    }
+
+    return typeof data === 'string' ? data.trim() : '';
+  }));
+}
+
+async function mapPublishedListings(rows: SupabaseListingRow[], includeSellerNames = false): Promise<Listing[]> {
+  const [imagesByListing, sellerNames] = await Promise.all([
+    getListingImages(rows.map((row) => row.id)),
+    includeSellerNames ? getSellerDisplayNames(rows) : Promise.resolve([]),
+  ]);
+
+  return rows.map((row, index) => ({
+    ...mapSupabaseListingToAjotoriListing(row, sellerNames[index] ?? null),
     images: imagesByListing.get(row.id) ?? [],
   }));
 }
@@ -80,6 +102,6 @@ export async function getPublishedListingById(id: string) {
 
   if (error || !data) return null;
 
-  const [listing] = await mapPublishedListings([data as SupabaseListingRow]);
+  const [listing] = await mapPublishedListings([data as SupabaseListingRow], true);
   return listing ?? null;
 }
