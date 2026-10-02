@@ -1,5 +1,5 @@
-import CategoryPage from '../components/CategoryPage';
+import { redirect } from 'next/navigation';
 
-export default function Empty1Page() {
-  return <CategoryPage title="empty1" categories={[]} subtitle="Tämä kategoria on varattu tulevaa käyttöä varten." />;
+export default function ListingsRedirectPage(): never {
+  redirect('/ilmoitukset/');
 }

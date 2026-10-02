@@ -1,15 +1,12 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Listing } from '@/lib/listings';
-import ListingFilters, { type ListingFilterState } from './ListingFilters';
+import { buildListingSearchUrl, filterListings, isListingSortKey, type ListingSearchFilters, type ListingSortKey } from '@/lib/listings-search';
+import ListingFilters from './ListingFilters';
 import ListingGrid from './ListingGrid';
 import ListingSort from './ListingSort';
-
-const defaultFilters: ListingFilterState = {
-  category: '', subcategory: '', province: '', municipality: '', brand: '', model: '',
-  priceMin: '', priceMax: '', yearMin: '', yearMax: '', powerSource: '', transmission: '',
-};
 
 function sortListings(listings: Listing[], sortKey: string) {
   const items = [...listings];
@@ -25,45 +22,56 @@ function sortListings(listings: Listing[], sortKey: string) {
 
 export default function ListingBrowser({
   listings,
-  initialCategory = '',
-  initialSubcategory = '',
+  initialFilters,
+  initialSortKey,
 }: {
   listings: Listing[];
-  initialCategory?: string;
-  initialSubcategory?: string;
+  initialFilters: ListingSearchFilters;
+  initialSortKey: ListingSortKey;
 }) {
-  const [filters, setFilters] = useState<ListingFilterState>({
-    ...defaultFilters, category: initialCategory, subcategory: initialSubcategory,
-  });
-  const [sortKey, setSortKey] = useState('newest');
+  const router = useRouter();
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+  const [sortKey, setSortKey] = useState<ListingSortKey>(initialSortKey);
+  const initialFiltersKey = JSON.stringify(initialFilters);
+
+  useEffect(() => {
+    const nextFilters = JSON.parse(initialFiltersKey) as ListingSearchFilters;
+    setFilters(nextFilters);
+    setAppliedFilters(nextFilters);
+  }, [initialFiltersKey]);
+
+  useEffect(() => {
+    setSortKey(initialSortKey);
+  }, [initialSortKey]);
 
   const filteredListings = useMemo(() => {
-    let items = listings;
-    if (filters.province) items = items.filter((listing) => listing.province === filters.province);
-    if (filters.municipality) items = items.filter((listing) => listing.municipality === filters.municipality);
-    if (filters.brand) items = items.filter((listing) => listing.brand.toLowerCase().includes(filters.brand.toLowerCase()));
-    if (filters.model) items = items.filter((listing) => listing.model.toLowerCase().includes(filters.model.toLowerCase()));
-    if (filters.priceMin) items = items.filter((listing) => listing.price >= Number(filters.priceMin));
-    if (filters.priceMax) items = items.filter((listing) => listing.price <= Number(filters.priceMax));
-    if (filters.yearMin) items = items.filter((listing) => listing.year >= Number(filters.yearMin));
-    if (filters.yearMax) items = items.filter((listing) => listing.year <= Number(filters.yearMax));
-    if (filters.powerSource) items = items.filter((listing) => listing.powerSource === filters.powerSource);
-    if (filters.transmission) items = items.filter((listing) => listing.transmission === filters.transmission);
-    return sortListings(items, sortKey);
-  }, [filters, listings, sortKey]);
+    return sortListings(filterListings(listings, appliedFilters), sortKey);
+  }, [appliedFilters, listings, sortKey]);
 
-  const handleFilterChange = (field: keyof ListingFilterState, value: string) => {
+  const handleFilterChange = (field: keyof ListingSearchFilters, value: string) => {
     setFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSearch = () => {
+    setAppliedFilters({ ...filters });
+    router.push(buildListingSearchUrl(filters, sortKey), { scroll: false });
+  };
+
+  const handleSortChange = (value: string) => {
+    if (!isListingSortKey(value)) return;
+    setSortKey(value);
+    router.replace(buildListingSearchUrl(appliedFilters, value), { scroll: false });
   };
 
   return (
     <>
-      <ListingFilters filters={filters} onChange={handleFilterChange} initialCategory={initialCategory} initialSubcategory={initialSubcategory} />
+      <ListingFilters filters={filters} onChange={handleFilterChange} onSearch={handleSearch} />
       <div className="mt-6 flex items-center justify-between gap-3">
         <p className="text-sm text-slate-600">{filteredListings.length} ilmoitusta</p>
-        <ListingSort value={sortKey} onChange={setSortKey} />
+        <ListingSort value={sortKey} onChange={handleSortChange} />
       </div>
-      <div className="mt-6"><ListingGrid listings={filteredListings} /></div>
+      <div className="mt-6"><ListingGrid listings={filteredListings} returnTo={buildListingSearchUrl(appliedFilters, sortKey)} /></div>
     </>
   );
 }

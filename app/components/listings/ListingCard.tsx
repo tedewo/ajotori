@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Listing } from '@/lib/listings';
 import { formatMileage, formatPrice } from '@/lib/listings';
 
-export default function ListingCard({ listing }: { listing: Listing }) {
+export default function ListingCard({ listing, returnTo }: { listing: Listing; returnTo: string }) {
   const primaryImage = listing.images?.[0] ?? '/icons/car.svg';
   const location = listing.municipality;
   const details = [
@@ -13,7 +13,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <Link
-      href={`/ilmoitukset/${listing.id}`}
+      href={`/ilmoitukset/${listing.id}?${new URLSearchParams({ returnTo }).toString()}`}
       className="group block overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-lg"
     >
       <div className="relative">

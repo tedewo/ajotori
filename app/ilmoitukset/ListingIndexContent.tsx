@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import ListingBrowser from '@/app/components/listings/ListingBrowser';
+import { DEFAULT_LISTING_SEARCH_FILTERS, isListingSortKey, type ListingSearchFilters } from '@/lib/listings-search';
 import { getPublishedListings } from '@/lib/listings-server';
 
 type ListingIndexContentProps = {
   initialCategory?: string;
   initialSubcategory?: string;
-  searchParams?: Promise<{ category?: string; subcategory?: string }>;
+  searchParams?: Promise<Partial<Record<keyof ListingSearchFilters | 'sort', string | string[]>>>;
 };
 
 export default async function ListingIndexContent({
@@ -14,8 +15,22 @@ export default async function ListingIndexContent({
   searchParams,
 }: ListingIndexContentProps) {
   const routeSearchParams = searchParams ? await searchParams : {};
-  const category = initialCategory || routeSearchParams.category || '';
-  const subcategory = initialSubcategory || routeSearchParams.subcategory || '';
+  const getParam = (key: keyof ListingSearchFilters | 'sort') => {
+    const value = routeSearchParams[key];
+    return Array.isArray(value) ? value[0] ?? '' : value ?? '';
+  };
+  const initialFilters: ListingSearchFilters = {
+    ...DEFAULT_LISTING_SEARCH_FILTERS,
+    ...Object.fromEntries(
+      Object.keys(DEFAULT_LISTING_SEARCH_FILTERS).map((key) => [key, getParam(key as keyof ListingSearchFilters)]),
+    ),
+    category: getParam('category') || initialCategory,
+    subcategory: getParam('subcategory') || initialSubcategory,
+  };
+  const category = initialFilters.category;
+  const subcategory = initialFilters.subcategory;
+  const sortValue = getParam('sort');
+  const initialSortKey = isListingSortKey(sortValue) ? sortValue : 'newest';
   const listings = await getPublishedListings({
     categorySlug: category || undefined,
     subcategorySlug: subcategory || undefined,
@@ -31,7 +46,7 @@ export default async function ListingIndexContent({
           </div>
           <Link href="/" className="inline-flex items-center text-sm font-medium text-slate-700 hover:text-[#0ea5e9]">← Takaisin etusivulle</Link>
         </div>
-        <ListingBrowser listings={listings} initialCategory={category} initialSubcategory={subcategory} />
+        <ListingBrowser listings={listings} initialFilters={initialFilters} initialSortKey={initialSortKey} />
       </div>
     </main>
   );

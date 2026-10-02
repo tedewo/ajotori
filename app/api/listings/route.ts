@@ -27,7 +27,6 @@ const DEFAULT_EXCLUDED_KEYS = new Set([
   'details',
   'searchTags',
   'powerEquivalent',
-  'powerUnit',
   'transmissionOther',
   'fuelOther',
   'hybridType',
@@ -35,6 +34,22 @@ const DEFAULT_EXCLUDED_KEYS = new Set([
   'location',
   'contact',
 ]);
+
+const MASS_FIELD_KEYS = new Set(['curbWeight', 'totalWeight', 'maxTrailerWeight']);
+
+function isValidPositiveNumber(value: unknown): boolean {
+  if (typeof value !== 'number' && typeof value !== 'string') return false;
+  if (typeof value === 'string' && !value.trim()) return false;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0;
+}
+
+function parseMassValue(value: unknown): number | null {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'string' && !value.trim()) return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue >= 0 ? numericValue : null;
+}
 
 function normaliseText(value: unknown): string | null {
   if (typeof value === 'string') {
@@ -54,6 +69,17 @@ function buildTechnicalData(payload: Record<string, unknown>) {
     if (DEFAULT_EXCLUDED_KEYS.has(key)) continue;
     if (value === null || value === undefined || value === '') continue;
     if (Array.isArray(value) && value.length === 0) continue;
+
+    if (MASS_FIELD_KEYS.has(key)) {
+      const massValue = parseMassValue(value);
+      if (massValue === null || (key !== 'maxTrailerWeight' && massValue === 0)) continue;
+      technicalData[key] = massValue;
+      continue;
+    }
+
+    if (key === 'powerUnit') {
+      if (!isValidPositiveNumber(payload.power) || (value !== 'hv' && value !== 'kW')) continue;
+    }
 
     technicalData[key] = value;
   }

@@ -1,10 +1,11 @@
 import type { Listing } from '@/lib/listings';
 import { formatMileage, formatPrice } from '@/lib/listings';
+import { formatTechnicalSpecValue, getTechnicalSpecEntries } from '@/lib/technicalSpecs';
 import ListingGallery from './ListingGallery';
 import SellerInfo from './SellerInfo';
 
 export default function ListingDetails({ listing }: { listing: Listing }) {
-  const technicalEntries = Object.entries(listing.technicalSpecs ?? {});
+  const technicalEntries = getTechnicalSpecEntries(listing.technicalSpecs ?? {}, listing);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -25,9 +26,9 @@ export default function ListingDetails({ listing }: { listing: Listing }) {
 
             <dl className="mt-5 space-y-3 text-sm text-slate-700">
               {listing.year && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Vuosimalli</dt><dd className="font-medium text-slate-900">{listing.year}</dd></div>}
-              {listing.mileage && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Ajomäärä</dt><dd className="font-medium text-slate-900">{formatMileage(listing.mileage)}</dd></div>}
-              {listing.powerSource && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Käyttövoima</dt><dd className="font-medium text-slate-900">{listing.powerSource}</dd></div>}
-              {listing.transmission && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Vaihteisto</dt><dd className="font-medium text-slate-900">{listing.transmission}</dd></div>}
+              {listing.mileage && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Ajokilometrit</dt><dd className="font-medium text-slate-900">{formatMileage(listing.mileage)}</dd></div>}
+              {listing.powerSource && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Käyttövoima</dt><dd className="font-medium text-slate-900">{formatTechnicalSpecValue(listing.powerSource)}</dd></div>}
+              {listing.transmission && <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Vaihteisto</dt><dd className="font-medium text-slate-900">{formatTechnicalSpecValue(listing.transmission)}</dd></div>}
               <div className="flex justify-between gap-3 border-b border-slate-100 pb-2"><dt>Sijainti</dt><dd className="font-medium text-slate-900">{[listing.province, listing.municipality].filter(Boolean).join(', ')}</dd></div>
             </dl>
           </div>

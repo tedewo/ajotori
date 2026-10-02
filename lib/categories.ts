@@ -7,7 +7,7 @@ export const CATEGORY_SLUGS = {
   kuormaAutot: 'kuorma-autot',
   muutAjoneuvot: 'muut-ajoneuvot',
   veneet: 'veneet',
-  empty1: 'empty1',
+  allListings: 'all-listings',
 } as const;
 
 export const SUBCATEGORY_SLUGS = {
@@ -109,11 +109,11 @@ const createVeneetCategory = (): Category => ({
   ],
 });
 
-const createEmptyCategory = (): Category => ({
+const createAllListingsCategory = (): Category => ({
   icon: '/icons/boat.svg',
-  title: 'empty1',
-  slug: CATEGORY_SLUGS.empty1,
-  href: '/empty1',
+  title: 'Kaikki ilmoitukset',
+  slug: CATEGORY_SLUGS.allListings,
+  href: '/ilmoitukset/',
   subcategories: [],
 });
 
@@ -197,7 +197,7 @@ export const categories: Category[] = [
       { icon: '/icons/truck.svg', title: 'Muut perävaunut', slug: SUBCATEGORY_SLUGS.muutperavaunut, href: '/muut-ajoneuvot/muut-peravaunut' },
     ],
   },
-  createEmptyCategory(),
+  createAllListingsCategory(),
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {

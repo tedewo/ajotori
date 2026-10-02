@@ -1,39 +1,26 @@
-import { categories } from '@/lib/categories';
+import { categories, CATEGORY_SLUGS } from '@/lib/categories';
+import { FUEL_OPTIONS, TRANSMISSION_OPTIONS } from '@/lib/formConfig';
 import { getMunicipalitiesForProvince, PROVINCES } from '@/lib/locations';
+import type { ListingSearchFilters } from '@/lib/listings-search';
 
-export type ListingFilterState = {
-  category: string;
-  subcategory: string;
-  province: string;
-  municipality: string;
-  brand: string;
-  model: string;
-  priceMin: string;
-  priceMax: string;
-  yearMin: string;
-  yearMax: string;
-  powerSource: string;
-  transmission: string;
-};
+export type ListingFilterState = ListingSearchFilters;
 
 type ListingFiltersProps = {
   filters: ListingFilterState;
   onChange: (field: keyof ListingFilterState, value: string) => void;
-  initialCategory?: string;
-  initialSubcategory?: string;
+  onSearch: () => void;
 };
 
 export default function ListingFilters({
   filters,
   onChange,
-  initialCategory,
-  initialSubcategory,
+  onSearch,
 }: ListingFiltersProps) {
-  const selectedCategory = categories.find((category) => category.slug === (initialCategory || filters.category));
+  const selectedCategory = categories.find((category) => category.slug === filters.category);
   const subcategories = selectedCategory?.subcategories ?? [];
   const municipalityOptions = filters.province ? getMunicipalitiesForProvince(filters.province) : [];
 
-  const categoryOptions = categories.map((category) => ({
+  const categoryOptions = categories.filter((category) => category.slug !== CATEGORY_SLUGS.allListings).map((category) => ({
     value: category.slug,
     label: category.title,
   }));
@@ -48,7 +35,7 @@ export default function ListingFilters({
         <label className="text-sm text-slate-700">
           <span className="mb-1 block font-medium">Pääkategoria</span>
           <select
-            value={initialCategory || filters.category}
+            value={filters.category}
             onChange={(event) => {
               onChange('category', event.target.value);
               onChange('subcategory', '');
@@ -67,10 +54,10 @@ export default function ListingFilters({
         <label className="text-sm text-slate-700">
           <span className="mb-1 block font-medium">Alikategoria</span>
           <select
-            value={initialSubcategory || filters.subcategory}
+            value={filters.subcategory}
             onChange={(event) => onChange('subcategory', event.target.value)}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
-            disabled={!(initialCategory || filters.category) && subcategories.length === 0}
+            disabled={!filters.category || subcategories.length === 0}
           >
             <option value="">Kaikki</option>
             {subcategories.map((subcategory) => (
@@ -195,10 +182,7 @@ export default function ListingFilters({
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
           >
             <option value="">Kaikki</option>
-            <option value="Bensiini">Bensiini</option>
-            <option value="Diesel">Diesel</option>
-            <option value="Sähkö">Sähkö</option>
-            <option value="Hybrid">Hybrid</option>
+            {FUEL_OPTIONS.filter((option) => option !== 'Muu').map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         </label>
 
@@ -210,11 +194,14 @@ export default function ListingFilters({
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
           >
             <option value="">Kaikki</option>
-            <option value="Automaattinen">Automaattinen</option>
-            <option value="Manuaalinen">Manuaalinen</option>
-            <option value="CVT">CVT</option>
+            {TRANSMISSION_OPTIONS.filter((option) => option !== 'Muu').map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         </label>
+      </div>
+      <div className="mt-5 flex justify-end">
+        <button type="button" onClick={onSearch} className="w-full rounded-2xl bg-[#0ea5e9] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0ca4dd] sm:w-auto">
+          Hae ilmoituksia
+        </button>
       </div>
     </div>
   );

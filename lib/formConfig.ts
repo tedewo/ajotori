@@ -58,7 +58,13 @@ const COMMON_ENGINE_VEHICLE_FIELDS: Field[] = [
   ...COMMON_MOTOR_VEHICLE_FIELDS,
 ];
 
-export const FORM_CONFIGS: FormConfig[] = [
+const COMMON_MASS_FIELDS: Field[] = [
+  { key: 'curbWeight', label: 'Omamassa (kg)', type: 'number' },
+  { key: 'totalWeight', label: 'Kokonaismassa (kg)', type: 'number' },
+  { key: 'maxTrailerWeight', label: 'Suurin sallittu perävaunumassa (kg)', type: 'number' },
+];
+
+export const FORM_CONFIGS: FormConfig[] = ([
   {
     slug: SUBCATEGORY_SLUGS.pakettiautot,
     title: 'Pakettiauto',
@@ -220,21 +226,44 @@ export const FORM_CONFIGS: FormConfig[] = [
   createBasicFormConfig(SUBCATEGORY_SLUGS.nosturit, 'Nosturi'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutmaanrakennuslaitteet, 'Muu maanrakennuslaite'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.maanrakennuslaitteidenperavaunut, 'Maanrakennuslaitteen perävaunu'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.lavakuljetus, 'Lavakuljetusauto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.lavakuljetus, 'Lavakuljetusauto', COMMON_ENGINE_VEHICLE_FIELDS),
   createBasicFormConfig(SUBCATEGORY_SLUGS.lavetit, 'Lavetti'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.puukuljetus, 'Puukuljetusauto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.maansiirto, 'Maansiirtoauto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.kappaletavara, 'Kappaletavara-auto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.kylmakuljetus, 'Kylmäkuljetusauto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.hinaus, 'Hinausauto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.veturit, 'Vetoauto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.linjaautot, 'Linja-auto'),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.muukuljetuskalusto, 'Muu kuljetuskalusto'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.puukuljetus, 'Puukuljetusauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.maansiirto, 'Maansiirtoauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kappaletavara, 'Kappaletavara-auto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.kylmakuljetus, 'Kylmäkuljetusauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.hinaus, 'Hinausauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.veturit, 'Vetoauto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.linjaautot, 'Linja-auto', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.muukuljetuskalusto, 'Muu kuljetuskalusto', COMMON_ENGINE_VEHICLE_FIELDS),
   createBasicFormConfig(SUBCATEGORY_SLUGS.raskaatperavaunut, 'Raskas perävaunu'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.trukit, 'Trukki'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutajoneuvot, 'Muu ajoneuvo'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutperavaunut, 'Muu perävaunu'),
-];
+] as FormConfig[]).map(addCommonMassFields);
+
+function addCommonMassFields(config: FormConfig): FormConfig {
+  const technicalSectionIndex = config.sections.findIndex((section) => section.key === 'technical');
+  const sections = [...config.sections];
+
+  if (technicalSectionIndex >= 0) {
+    const technicalSection = sections[technicalSectionIndex];
+    const existingKeys = new Set(technicalSection.fields.map((field) => field.key));
+    sections[technicalSectionIndex] = {
+      ...technicalSection,
+      fields: [...technicalSection.fields, ...COMMON_MASS_FIELDS.filter((field) => !existingKeys.has(field.key))],
+    };
+  } else {
+    const detailsIndex = sections.findIndex((section) => section.key === 'details');
+    sections.splice(detailsIndex >= 0 ? detailsIndex : sections.length, 0, {
+      key: 'technical',
+      title: 'Tekniset tiedot',
+      fields: COMMON_MASS_FIELDS,
+    });
+  }
+
+  return { ...config, sections };
+}
 
 function createMachineFormConfig(slug: string, title: string): FormConfig {
   return {
