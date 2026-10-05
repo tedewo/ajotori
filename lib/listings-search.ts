@@ -1,4 +1,5 @@
 import type { Listing } from './listings';
+import { CATEGORY_SLUGS, SUBCATEGORY_SLUGS } from './categories';
 
 export type ListingSearchFilters = {
   category: string;
@@ -13,6 +14,7 @@ export type ListingSearchFilters = {
   yearMax: string;
   powerSource: string;
   transmission: string;
+  registrationType: string;
 };
 
 export const DEFAULT_LISTING_SEARCH_FILTERS: ListingSearchFilters = {
@@ -28,6 +30,7 @@ export const DEFAULT_LISTING_SEARCH_FILTERS: ListingSearchFilters = {
   yearMax: '',
   powerSource: '',
   transmission: '',
+  registrationType: '',
 };
 
 export const LISTING_SORT_KEYS = ['newest', 'price-asc', 'price-desc', 'year-desc', 'year-asc'] as const;
@@ -99,6 +102,7 @@ export function filterListings(listings: Listing[], filters: ListingSearchFilter
     if ((filters.yearMin.trim() || filters.yearMax.trim()) && (!listing.year || !matchesNumberRange(listing.year, filters.yearMin, filters.yearMax))) return false;
     if (filters.powerSource && normalizeOption(listing.powerSource) !== normalizeOption(filters.powerSource)) return false;
     if (filters.transmission && normalizeOption(listing.transmission) !== normalizeOption(filters.transmission)) return false;
+    if (filters.category === CATEGORY_SLUGS.pienkoneet && filters.subcategory === SUBCATEGORY_SLUGS.monkijat && filters.registrationType && listing.technicalSpecs.registrationType !== filters.registrationType) return false;
     return true;
   });
 }

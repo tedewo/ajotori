@@ -87,6 +87,7 @@ function CreateListingDetailsContent() {
         ? Number(String(value).replace(/\s*l$/, ''))
         : value;
       const next = { ...p, [key]: fieldValue };
+      if (key === 'registered' && value !== 'Kyllä') next.registrationType = '';
       const brand = typeof next.brand === 'string' ? next.brand.trim() : '';
       const model = typeof next.model === 'string' ? next.model.trim() : '';
       const year = typeof next.year === 'string' || typeof next.year === 'number' ? String(next.year).trim() : '';
@@ -374,6 +375,7 @@ function CreateListingDetailsContent() {
                           }
                           return <NumberField key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} placeholder={field.placeholder} required={field.required} />;
                         case 'select':
+                          if (field.key === 'registrationType' && formData.registered !== 'Kyllä') return null;
                           if (field.key === 'transmission') {
                             return (
                               <div key={field.key} className="space-y-3">

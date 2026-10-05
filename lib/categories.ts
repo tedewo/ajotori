@@ -12,6 +12,7 @@ export const CATEGORY_SLUGS = {
 
 export const SUBCATEGORY_SLUGS = {
   henkiloautot: 'henkiloautot',
+  vesijetit: 'vesijetit',
   pakettiautot: 'pakettiautot',
   matkailuautot: 'matkailuautot',
   lavaautot: 'lava-autot',
@@ -106,6 +107,7 @@ const createVeneetCategory = (): Category => ({
   href: '/veneet',
   subcategories: [
     { icon: '/icons/boat.svg', title: 'Veneet', slug: SUBCATEGORY_SLUGS.veneet, href: '/veneet/veneet' },
+    { icon: '/icons/boat.svg', title: 'Vesijetit', slug: SUBCATEGORY_SLUGS.vesijetit, href: '/veneet/vesijetit' },
   ],
 });
 
@@ -162,8 +164,8 @@ export const categories: Category[] = [
       { icon: '/icons/tractor.svg', title: 'Pyöräkuormaajat', slug: SUBCATEGORY_SLUGS.pyorakuormaajat, href: '/maanrakennus/pyorakuormaajat' },
       { icon: '/icons/truck.svg', title: 'Tienhoito', slug: SUBCATEGORY_SLUGS.tienhoito, href: '/maanrakennus/tienhoito' },
       { icon: '/icons/crane.svg', title: 'Nosturit', slug: SUBCATEGORY_SLUGS.nosturit, href: '/maanrakennus/nosturit' },
-      { icon: '/icons/excavator.svg', title: 'Muut maanrakennuslaitteet', slug: SUBCATEGORY_SLUGS.muutmaanrakennuslaitteet, href: '/maanrakennus/muut-maanrakennuslaitteet' },
-      { icon: '/icons/truck.svg', title: 'Maanrakennuslaitteiden perävaunut', slug: SUBCATEGORY_SLUGS.maanrakennuslaitteidenperavaunut, href: '/maanrakennus/maanrakennuslaitteiden-peravaunut' },
+      { icon: '/icons/excavator.svg', title: 'Muu maanrakennus', slug: SUBCATEGORY_SLUGS.muutmaanrakennuslaitteet, href: '/maanrakennus/muut-maanrakennuslaitteet' },
+      { icon: '/icons/truck.svg', title: 'Maanrakennus perävaunut', slug: SUBCATEGORY_SLUGS.maanrakennuslaitteidenperavaunut, href: '/maanrakennus/maanrakennuslaitteiden-peravaunut' },
     ],
   },
   {

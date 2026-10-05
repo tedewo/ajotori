@@ -1,4 +1,4 @@
-import { categories, CATEGORY_SLUGS } from '@/lib/categories';
+import { categories, CATEGORY_SLUGS, SUBCATEGORY_SLUGS } from '@/lib/categories';
 import { FUEL_OPTIONS, TRANSMISSION_OPTIONS } from '@/lib/formConfig';
 import { getMunicipalitiesForProvince, PROVINCES } from '@/lib/locations';
 import type { ListingSearchFilters } from '@/lib/listings-search';
@@ -19,6 +19,7 @@ export default function ListingFilters({
   const selectedCategory = categories.find((category) => category.slug === filters.category);
   const subcategories = selectedCategory?.subcategories ?? [];
   const municipalityOptions = filters.province ? getMunicipalitiesForProvince(filters.province) : [];
+  const showRegistrationType = filters.category === CATEGORY_SLUGS.pienkoneet && filters.subcategory === SUBCATEGORY_SLUGS.monkijat;
 
   const categoryOptions = categories.filter((category) => category.slug !== CATEGORY_SLUGS.allListings).map((category) => ({
     value: category.slug,
@@ -39,6 +40,7 @@ export default function ListingFilters({
             onChange={(event) => {
               onChange('category', event.target.value);
               onChange('subcategory', '');
+              onChange('registrationType', '');
             }}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
           >
@@ -55,7 +57,10 @@ export default function ListingFilters({
           <span className="mb-1 block font-medium">Alikategoria</span>
           <select
             value={filters.subcategory}
-            onChange={(event) => onChange('subcategory', event.target.value)}
+            onChange={(event) => {
+              onChange('subcategory', event.target.value);
+              if (event.target.value !== SUBCATEGORY_SLUGS.monkijat) onChange('registrationType', '');
+            }}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
             disabled={!filters.category || subcategories.length === 0}
           >
@@ -67,6 +72,22 @@ export default function ListingFilters({
             ))}
           </select>
         </label>
+
+        {showRegistrationType ? (
+          <label className="text-sm text-slate-700">
+            <span className="mb-1 block font-medium">Rekisteröintityyppi</span>
+            <select
+              value={filters.registrationType}
+              onChange={(event) => onChange('registrationType', event.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-[#0ea5e9] focus:bg-white"
+            >
+              <option value="">Kaikki</option>
+              <option value="Traktorimönkijä">Traktorimönkijä</option>
+              <option value="Tieliikennemönkijä">Tieliikennemönkijä</option>
+              <option value="Mopomönkijä">Mopomönkijä</option>
+            </select>
+          </label>
+        ) : null}
 
         <label className="text-sm text-slate-700">
           <span className="mb-1 block font-medium">Maakunta</span>

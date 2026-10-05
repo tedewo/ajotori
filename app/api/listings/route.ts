@@ -25,6 +25,7 @@ const DEFAULT_EXCLUDED_KEYS = new Set([
   'phone',
   'email',
   'details',
+  'features',
   'searchTags',
   'powerEquivalent',
   'transmissionOther',
@@ -69,6 +70,14 @@ function buildTechnicalData(payload: Record<string, unknown>) {
     if (DEFAULT_EXCLUDED_KEYS.has(key)) continue;
     if (value === null || value === undefined || value === '') continue;
     if (Array.isArray(value) && value.length === 0) continue;
+    if (key === 'registrationType' && payload.registered !== 'Kyllä') continue;
+
+    if (key === 'maxPassengers') {
+      const passengerCount = parseMassValue(value);
+      if (passengerCount === null || passengerCount <= 0) continue;
+      technicalData[key] = passengerCount;
+      continue;
+    }
 
     if (MASS_FIELD_KEYS.has(key)) {
       const massValue = parseMassValue(value);
@@ -186,7 +195,8 @@ export async function POST(request: Request) {
   });
 
   const sellerType: 'private' | 'company' = profileRow?.seller_type === 'company' ? 'company' : 'private';
-  const equipment = Array.isArray(payload.equipment) ? payload.equipment.filter((item) => typeof item === 'string') : [];
+  const equipmentSource = Array.isArray(payload.equipment) ? payload.equipment : payload.features;
+  const equipment = Array.isArray(equipmentSource) ? equipmentSource.filter((item) => typeof item === 'string') : [];
   const description = normaliseText(payload.description) ?? normaliseText(payload.details) ?? '';
   const region = normaliseText(payload.region) ?? normaliseText(payload.province);
   const municipality = normaliseText(payload.municipality);

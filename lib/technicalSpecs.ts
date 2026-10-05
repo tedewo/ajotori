@@ -30,6 +30,14 @@ const LABELS: Record<string, string> = {
   boomtype: 'Puomin tyyppi',
   bucketcount: 'Kauhojen määrä',
   quickcoupler: 'Pikakiinnike',
+  trailertype: 'Trailerin tyyppi',
+  vehicletype: 'Ajoneuvon tyyppi',
+  registered: 'Rekisteröity',
+  registrationtype: 'Rekisteröintityyppi',
+  motorcycletype: 'Moottoripyörän tyyppi',
+  snowmobiletype: 'Moottorikelkan tyyppi',
+  boattype: 'Veneen tyyppi',
+  maxpassengers: 'Suurin sallittu henkilömäärä',
 };
 
 const VALUES: Record<string, string> = {

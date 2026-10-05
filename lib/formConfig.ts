@@ -19,6 +19,11 @@ export const FUEL_OPTIONS = ['Diesel', 'Bensiini', 'Sähkö', 'Hybridi', 'Kaasu'
 export const POWER_UNIT_OPTIONS = ['kW', 'hv'];
 export const DRIVETRAIN_OPTIONS = ['Etuveto', 'Takaveto', 'Neliveto', 'Muu'];
 export const BOOM_TYPE_OPTIONS = ['Yksiosainen puomi', 'Kaksiosainen puomi', 'Kolmiosainen puomi', 'Muu'];
+export const TRAILER_TYPE_OPTIONS = ['Kevyt perävaunu', 'Jarruton perävaunu', 'Jarrullinen perävaunu', 'Kippiperävaunu', 'Lavetti', 'Venetraileri', 'Autotraileri', 'Asuntovaunu', 'Muu'];
+export const ATV_TYPE_OPTIONS = ['Maastomönkijä', 'Crossimönkijä', 'UTV', 'Työmönkijä', 'Muu'];
+export const ATV_REGISTRATION_TYPE_OPTIONS = ['Traktorimönkijä', 'Tieliikennemönkijä', 'Mopomönkijä'];
+export const MOTORCYCLE_TYPE_OPTIONS = ['Kevyt moottoripyörä', 'Crossi', 'Enduro', 'Motocross', 'Supermoto', 'Katu', 'Matka', 'Adventure', 'Custom', 'Muu'];
+export const SNOWMOBILE_TYPE_OPTIONS = ['Touring', 'Sport', 'Crossover', 'Mountain', 'Työkelkka', 'Lasten / nuorten kelkka', 'Muu'];
 export const ENGINE_SIZE_OPTIONS = Array.from({ length: 1000 }, (_, index) => {
   const size = ((index + 1) / 10).toFixed(1);
   return `${size} l`;
@@ -64,7 +69,7 @@ const COMMON_MASS_FIELDS: Field[] = [
   { key: 'maxTrailerWeight', label: 'Suurin sallittu perävaunumassa (kg)', type: 'number' },
 ];
 
-export const FORM_CONFIGS: FormConfig[] = ([
+const RAW_FORM_CONFIGS: FormConfig[] = [
   {
     slug: SUBCATEGORY_SLUGS.pakettiautot,
     title: 'Pakettiauto',
@@ -73,7 +78,7 @@ export const FORM_CONFIGS: FormConfig[] = ([
         key: 'basic',
         title: 'Perustiedot',
         fields: [
-          { key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'Esim. Toyota' },
+          { key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'esim. Volkswagen' },
           { key: 'model', label: 'Malli', type: 'model', required: true, placeholder: 'Esim. Hiace' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
           { key: 'price', label: 'Hinta (€)', type: 'number', required: true },
@@ -126,7 +131,7 @@ export const FORM_CONFIGS: FormConfig[] = ([
         key: 'basic',
         title: 'Perustiedot',
         fields: [
-          { key: 'brand', label: 'Merkki', type: 'brand', required: true },
+          { key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'esim. Toyota' },
           { key: 'model', label: 'Malli', type: 'model' },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
           { key: 'price', label: 'Hinta (€)', type: 'number' },
@@ -191,8 +196,8 @@ export const FORM_CONFIGS: FormConfig[] = ([
     slug: SUBCATEGORY_SLUGS.veneet,
     title: 'Vene',
     sections: [
-      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'brand', label: 'Merkki', type: 'brand', required: true }, { key: 'model', label: 'Malli', type: 'model' }, { key: 'year', label: 'Vuosimalli', type: 'number' }, { key: 'price', label: 'Hinta (€)', type: 'number', required: true }] },
-      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'engineSize', label: 'Moottorin koko', type: 'select', options: ENGINE_SIZE_OPTIONS }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'fuel', label: 'Käyttövoima', type: 'select', options: FUEL_OPTIONS }, { key: 'hours', label: 'Käyttötunnit', type: 'number' }] },
+      { key: 'basic', title: 'Perustiedot', fields: [{ key: 'brand', label: 'Merkki', type: 'brand', required: true, placeholder: 'esim. Buster' }, { key: 'model', label: 'Malli', type: 'model' }, { key: 'year', label: 'Vuosimalli', type: 'number' }, { key: 'price', label: 'Hinta (€)', type: 'number', required: true }] },
+      { key: 'technical', title: 'Tekniset tiedot', fields: [{ key: 'boatType', label: 'Veneen tyyppi', type: 'select', options: ['Soutuvene', 'Moottorivene', 'Pulpettivene', 'HT-vene', 'Bowrider', 'Cabin / hyttivene', 'Matkavene', 'Purjevene', 'Kumivene', 'Muu'] }, { key: 'engineSize', label: 'Moottorin koko', type: 'select', options: ENGINE_SIZE_OPTIONS }, { key: 'power', label: 'Teho', type: 'number' }, { key: 'fuel', label: 'Käyttövoima', type: 'select', options: FUEL_OPTIONS }, { key: 'hours', label: 'Käyttötunnit', type: 'number' }, { key: 'maxPassengers', label: 'Suurin sallittu henkilömäärä', type: 'number' }] },
       { key: 'details', title: 'Lisätiedot', fields: [{ key: 'details', label: 'Lisätiedot', type: 'textarea' }] },
       { key: 'images', title: 'Kuvat', fields: [{ key: 'images', label: 'Kuvat', type: 'image' }] },
       { key: 'location', title: 'Sijainti', fields: [{ key: 'location', label: 'Sijainti', type: 'location' }] },
@@ -208,13 +213,13 @@ export const FORM_CONFIGS: FormConfig[] = ([
   createBasicFormConfig(SUBCATEGORY_SLUGS.matkailuautot, 'Matkailuauto', COMMON_ENGINE_VEHICLE_FIELDS),
   createBasicFormConfig(SUBCATEGORY_SLUGS.lavaautot, 'Lava-auto', COMMON_ENGINE_VEHICLE_FIELDS),
   createBasicFormConfig(SUBCATEGORY_SLUGS.kevyetkuormaautot, 'Kevyt kuorma-auto', COMMON_ENGINE_VEHICLE_FIELDS),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.autonperavaunut, 'Auton perävaunu'),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.autonperavaunut, 'Auton perävaunu', [{ key: 'trailerType', label: 'Trailerin tyyppi', type: 'select', options: TRAILER_TYPE_OPTIONS }]),
   createBasicFormConfig(SUBCATEGORY_SLUGS.mopoautot, 'Mopoauto', COMMON_ENGINE_VEHICLE_FIELDS),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.moottoripyorat, 'Moottoripyörä', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.moottoripyorat, 'Moottoripyörä', [...COMMON_ENGINE_VEHICLE_FIELDS, { key: 'motorcycleType', label: 'Moottoripyörän tyyppi', type: 'select', options: MOTORCYCLE_TYPE_OPTIONS }]),
   createBasicFormConfig(SUBCATEGORY_SLUGS.mopot, 'Mopo', COMMON_MOTOR_VEHICLE_FIELDS),
   createBasicFormConfig(SUBCATEGORY_SLUGS.skootterit, 'Skootteri', COMMON_MOTOR_VEHICLE_FIELDS),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.monkijat, 'Mönkijä', COMMON_ENGINE_VEHICLE_FIELDS),
-  createBasicFormConfig(SUBCATEGORY_SLUGS.moottorikelkat, 'Moottorikelkka', COMMON_ENGINE_VEHICLE_FIELDS),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.monkijat, 'Mönkijä', [...COMMON_ENGINE_VEHICLE_FIELDS, { key: 'vehicleType', label: 'Ajoneuvon tyyppi', type: 'select', options: ATV_TYPE_OPTIONS }]),
+  createBasicFormConfig(SUBCATEGORY_SLUGS.moottorikelkat, 'Moottorikelkka', [...COMMON_ENGINE_VEHICLE_FIELDS, { key: 'snowmobileType', label: 'Moottorikelkan tyyppi', type: 'select', options: SNOWMOBILE_TYPE_OPTIONS }]),
   createBasicFormConfig(SUBCATEGORY_SLUGS.ruohonleikkurit, 'Ruohonleikkuri'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutpienkoneet, 'Muu pienkone'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.pienkoneidenperavaunut, 'Pienkoneen perävaunu'),
@@ -240,7 +245,13 @@ export const FORM_CONFIGS: FormConfig[] = ([
   createBasicFormConfig(SUBCATEGORY_SLUGS.trukit, 'Trukki'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutajoneuvot, 'Muu ajoneuvo'),
   createBasicFormConfig(SUBCATEGORY_SLUGS.muutperavaunut, 'Muu perävaunu'),
-] as FormConfig[]).map(addCommonMassFields);
+  createBasicFormConfig(SUBCATEGORY_SLUGS.vesijetit, 'Vesijetti', [
+    { key: 'engineSize', label: 'Moottorin koko', type: 'select', options: ENGINE_SIZE_OPTIONS },
+    { key: 'power', label: 'Teho', type: 'number' },
+    { key: 'fuel', label: 'Käyttövoima', type: 'select', options: FUEL_OPTIONS },
+    { key: 'hours', label: 'Käyttötunnit', type: 'number' },
+  ]),
+];
 
 function addCommonMassFields(config: FormConfig): FormConfig {
   const technicalSectionIndex = config.sections.findIndex((section) => section.key === 'technical');
@@ -251,14 +262,117 @@ function addCommonMassFields(config: FormConfig): FormConfig {
     const existingKeys = new Set(technicalSection.fields.map((field) => field.key));
     sections[technicalSectionIndex] = {
       ...technicalSection,
-      fields: [...technicalSection.fields, ...COMMON_MASS_FIELDS.filter((field) => !existingKeys.has(field.key))],
+      fields: [...technicalSection.fields, ...getCommonMassFields(config).filter((field) => !existingKeys.has(field.key))],
     };
   } else {
     const detailsIndex = sections.findIndex((section) => section.key === 'details');
     sections.splice(detailsIndex >= 0 ? detailsIndex : sections.length, 0, {
       key: 'technical',
       title: 'Tekniset tiedot',
-      fields: COMMON_MASS_FIELDS,
+      fields: getCommonMassFields(config),
+    });
+  }
+
+  return { ...config, sections };
+}
+
+function getCommonMassFields(config: FormConfig): Field[] {
+  if (config.slug === SUBCATEGORY_SLUGS.vesijetit) return [];
+  if (config.slug === SUBCATEGORY_SLUGS.veneet) return COMMON_MASS_FIELDS.filter((field) => field.key !== 'maxTrailerWeight');
+  return COMMON_MASS_FIELDS;
+}
+
+const EQUIPMENT_OPTIONS: Record<string, string[]> = {
+  [SUBCATEGORY_SLUGS.autonperavaunut]: ['Kuomu'],
+  [SUBCATEGORY_SLUGS.monkijat]: ['Vinssi', 'Puskulevy', 'Telasarja'],
+  [SUBCATEGORY_SLUGS.moottoripyorat]: ['ABS-jarrut', 'Lämmitettävät kahvat', 'Tuulilasi'],
+  [SUBCATEGORY_SLUGS.mopot]: ['Tavarateline', 'Tuulilasi', 'Lukkiutumattomat jarrut'],
+  [SUBCATEGORY_SLUGS.skootterit]: ['Tavaratila', 'Tuulilasi', 'Tavarateline'],
+  [SUBCATEGORY_SLUGS.moottorikelkat]: ['Kahvanlämmittimet', 'Peruutusvaihde', 'Penkinlämmitys'],
+  [SUBCATEGORY_SLUGS.ruohonleikkurit]: ['Kerääjä', 'Silppuri', 'Peräkärry'],
+  [SUBCATEGORY_SLUGS.muutpienkoneet]: ['Työvalot', 'Sähkökäynnistys'],
+  [SUBCATEGORY_SLUGS.pienkoneidenperavaunut]: ['Kuomu', 'Tukijalat'],
+  [SUBCATEGORY_SLUGS.veneet]: ['Kaikuluotain'],
+  [SUBCATEGORY_SLUGS.vesijetit]: ['Kaikuluotain'],
+  [SUBCATEGORY_SLUGS.trukit]: ['Sivusiirto', 'Työvalot', 'Laturi'],
+  [SUBCATEGORY_SLUGS.muutajoneuvot]: ['Lisävalot', 'Työkalulaatikko'],
+  [SUBCATEGORY_SLUGS.muutperavaunut]: ['Kuomu', 'Tukijalat'],
+};
+
+const HEAVY_VEHICLE_SLUGS: string[] = [
+  SUBCATEGORY_SLUGS.lavakuljetus,
+  SUBCATEGORY_SLUGS.lavetit,
+  SUBCATEGORY_SLUGS.puukuljetus,
+  SUBCATEGORY_SLUGS.maansiirto,
+  SUBCATEGORY_SLUGS.kappaletavara,
+  SUBCATEGORY_SLUGS.kylmakuljetus,
+  SUBCATEGORY_SLUGS.hinaus,
+  SUBCATEGORY_SLUGS.veturit,
+  SUBCATEGORY_SLUGS.linjaautot,
+  SUBCATEGORY_SLUGS.muukuljetuskalusto,
+  SUBCATEGORY_SLUGS.raskaatperavaunut,
+];
+
+const AGRICULTURAL_SLUGS: string[] = [
+  SUBCATEGORY_SLUGS.traktorit,
+  SUBCATEGORY_SLUGS.puimurit,
+  SUBCATEGORY_SLUGS.muutmaatalouskoneet,
+  SUBCATEGORY_SLUGS.traktorinlisalaitteet,
+  SUBCATEGORY_SLUGS.traktorinperavaunut,
+];
+
+const FORESTRY_SLUGS: string[] = [SUBCATEGORY_SLUGS.metsatraktorit, SUBCATEGORY_SLUGS.harvesterit, SUBCATEGORY_SLUGS.muutmetsakoneet];
+const SMALL_MACHINE_SLUGS = new Set<string>([
+  SUBCATEGORY_SLUGS.moottoripyorat,
+  SUBCATEGORY_SLUGS.mopot,
+  SUBCATEGORY_SLUGS.skootterit,
+  SUBCATEGORY_SLUGS.monkijat,
+  SUBCATEGORY_SLUGS.moottorikelkat,
+  SUBCATEGORY_SLUGS.ruohonleikkurit,
+  SUBCATEGORY_SLUGS.muutpienkoneet,
+  SUBCATEGORY_SLUGS.pienkoneidenperavaunut,
+]);
+
+function getBrandPlaceholder(slug: string): string | undefined {
+  if (slug === SUBCATEGORY_SLUGS.henkiloautot || slug === SUBCATEGORY_SLUGS.muutajoneuvot) return 'esim. Toyota';
+  if (slug === SUBCATEGORY_SLUGS.pakettiautot) return 'esim. Volkswagen';
+  if (slug === SUBCATEGORY_SLUGS.autonperavaunut) return 'esim. Juhta';
+  if (slug === SUBCATEGORY_SLUGS.kevyetkuormaautot) return 'esim. Mercedes-Benz';
+  if (slug === SUBCATEGORY_SLUGS.lavaautot) return 'esim. Iveco';
+  if (slug === SUBCATEGORY_SLUGS.matkailuautot) return 'esim. Fiat';
+  if (slug === SUBCATEGORY_SLUGS.mopoautot) return 'esim. Aixam';
+  if (slug === SUBCATEGORY_SLUGS.vesijetit) return 'esim. Yamaha';
+  if (slug === SUBCATEGORY_SLUGS.veneet) return 'esim. Buster';
+  if (slug === SUBCATEGORY_SLUGS.trukit) return 'esim. Jungheinrich';
+  if (slug === SUBCATEGORY_SLUGS.muutperavaunut) return 'esim. Aku';
+  if (HEAVY_VEHICLE_SLUGS.includes(slug)) return 'esim. Scania';
+  if (AGRICULTURAL_SLUGS.includes(slug)) return 'esim. Valtra';
+  if (FORESTRY_SLUGS.includes(slug)) return 'esim. Ponsse';
+  if (SMALL_MACHINE_SLUGS.has(slug)) return 'esim. Yamaha';
+  return undefined;
+}
+
+function addCategoryFormFields(config: FormConfig): FormConfig {
+  const sections = config.sections.map((section) => ({ ...section, fields: [...section.fields] }));
+  const brandPlaceholder = getBrandPlaceholder(config.slug);
+  const basicIndex = sections.findIndex((section) => section.key === 'basic');
+  const technicalIndex = sections.findIndex((section) => section.key === 'technical');
+
+  if (brandPlaceholder && basicIndex >= 0) {
+    sections[basicIndex].fields = sections[basicIndex].fields.map((field) => field.key === 'brand' ? { ...field, placeholder: brandPlaceholder } : field);
+  }
+  if (config.slug === SUBCATEGORY_SLUGS.monkijat && basicIndex >= 0) {
+    sections[basicIndex].fields.push({ key: 'registered', label: 'Rekisteröity', type: 'select', options: ['Ei', 'Kyllä'] });
+    sections[basicIndex].fields.push({ key: 'registrationType', label: 'Rekisteröintityyppi', type: 'select', options: ATV_REGISTRATION_TYPE_OPTIONS });
+  }
+
+  const equipmentOptions = EQUIPMENT_OPTIONS[config.slug] ?? (HEAVY_VEHICLE_SLUGS.includes(config.slug) ? ['Ilmastointi', 'Perälautanostin', 'Lisävalot'] : undefined);
+  if (equipmentOptions && !sections.some((section) => section.key === 'features')) {
+    const detailsIndex = sections.findIndex((section) => section.key === 'details');
+    sections.splice(detailsIndex >= 0 ? detailsIndex : sections.length, 0, {
+      key: 'features',
+      title: 'Varusteet',
+      fields: [{ key: 'features', label: 'Varusteet', type: 'checkboxGroup', options: equipmentOptions }],
     });
   }
 
@@ -308,7 +422,7 @@ function createBasicFormConfig(slug: string, title: string, technicalFields: Fie
         key: 'basic',
         title: 'Perustiedot',
         fields: [
-          { key: 'brand', label: 'Merkki / valmistaja', type: 'brand', placeholder: 'Esim. Toyota' },
+          { key: 'brand', label: 'Merkki / valmistaja', type: 'brand' },
           { key: 'model', label: 'Malli / tuotteen nimi', type: 'model', required: true },
           { key: 'year', label: 'Vuosimalli', type: 'number' },
           { key: 'price', label: 'Hinta (€)', type: 'number', required: true },
@@ -324,6 +438,8 @@ function createBasicFormConfig(slug: string, title: string, technicalFields: Fie
     ],
   };
 }
+
+export const FORM_CONFIGS: FormConfig[] = RAW_FORM_CONFIGS.map(addCommonMassFields).map(addCategoryFormFields);
 
 export function getFormConfigBySlug(slug: string) {
   return FORM_CONFIGS.find((f) => f.slug === slug) ?? null;
