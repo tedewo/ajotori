@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import type { Listing } from '@/lib/listings';
 import { formatMileage, formatPrice } from '@/lib/listings';
+import { formatTechnicalSpecValue } from '@/lib/technicalSpecs';
 
 export default function ListingCard({ listing, returnTo }: { listing: Listing; returnTo: string }) {
   const primaryImage = listing.images?.[0] ?? '/icons/car.svg';
-  const location = listing.municipality;
+  const location = [listing.municipality, listing.province].filter((value) => value.trim()).join(' · ');
   const details = [
-    listing.mileage ? formatMileage(listing.mileage) : null,
-    listing.powerSource || null,
-    listing.transmission || null,
-  ].filter(Boolean) as string[];
+    listing.mileage !== undefined && Number.isFinite(listing.mileage) && listing.mileage > 0
+      ? formatMileage(listing.mileage)
+      : null,
+    listing.powerSource.trim() ? formatTechnicalSpecValue(listing.powerSource) : null,
+    listing.transmission.trim() ? formatTechnicalSpecValue(listing.transmission) : null,
+  ].filter((detail): detail is string => Boolean(detail));
 
   return (
     <Link
@@ -25,9 +28,6 @@ export default function ListingCard({ listing, returnTo }: { listing: Listing; r
         <span className="absolute left-4 top-4 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
           {listing.year}
         </span>
-        <span className="absolute right-4 top-4 rounded-full bg-[#0ea5e9] px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
-          {formatPrice(listing.price)}
-        </span>
       </div>
 
       <div className="p-4">
@@ -38,20 +38,19 @@ export default function ListingCard({ listing, returnTo }: { listing: Listing; r
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2 text-[12px] text-slate-600">
-          {details.length > 0 ? (
-            details.map((detail) => (
+        {details.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 text-[12px] text-slate-600">
+            {details.map((detail) => (
               <span key={detail} className="rounded-full bg-slate-100 px-2.5 py-1">
                 {detail}
               </span>
-            ))
-          ) : (
-            <span className="rounded-full bg-slate-100 px-2.5 py-1">Tiedot julkaistaan myöhemmin</span>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
-        <div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
-          <span>{location || 'Sijainti ilmoitetaan'}</span>
+        <div className="mt-4 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <span className="min-w-0 break-words text-sm text-slate-600">{location}</span>
+          <span className="shrink-0 text-lg font-bold text-[#0ea5e9]">{formatPrice(listing.price)}</span>
         </div>
       </div>
     </Link>
