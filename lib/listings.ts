@@ -16,6 +16,7 @@ export interface Listing {
   municipality: string;
   images: string[];
   description: string;
+  homepageDescription?: string;
   technicalSpecs: Record<string, string>;
   features: string[];
   sellerType: SellerType;

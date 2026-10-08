@@ -36,7 +36,12 @@ function CreateListingDetailsContent() {
   const formConfig = getFormConfigBySlug(subcategorySlug || categorySlug);
 
   const initialValues = useMemo(() => {
-    const base: Record<string, any> = { category: categorySlug, subcategory: subcategorySlug };
+    const base: Record<string, any> = {
+      category: categorySlug,
+      subcategory: subcategorySlug,
+      homepageDescription: '',
+      externalListingUrl: '',
+    };
     if (!formConfig) return base;
     const hasLocationField = formConfig.sections.some((section) => section.fields.some((field) => field.type === 'location'));
     formConfig.sections.forEach((sec) => {
@@ -249,6 +254,7 @@ function CreateListingDetailsContent() {
           region: formData.province,
           municipality: formData.municipality,
           description: formData.details ?? formData.description ?? '',
+          homepage_description: formData.homepageDescription ?? '',
           seller_type: formData.sellerType ?? 'private',
           external_listing_url: formData.externalListingUrl ?? null,
         };
@@ -262,6 +268,18 @@ function CreateListingDetailsContent() {
         if (!response.ok || !result.listingId) throw new Error(result.error || 'Tallennus epäonnistui.');
         listingId = result.listingId;
         setCreatedListingId(listingId);
+      } else {
+        const response = await fetch(`/api/listings/${listingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            homepage_description: formData.homepageDescription ?? '',
+            description: formData.details ?? formData.description ?? '',
+            external_listing_url: formData.externalListingUrl ?? '',
+          }),
+        });
+        const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string };
+        if (!response.ok) throw new Error(result.error || 'Tallennus epäonnistui.');
       }
 
       const files = formData.images ?? [];
@@ -336,6 +354,45 @@ function CreateListingDetailsContent() {
               <div key={section.key}>
                 <SectionCard title={section.title}>
                   <div className="grid gap-6 lg:grid-cols-2">
+                    {section.key === 'details' ? (
+                      <>
+                        <div>
+                          <label htmlFor="homepageDescription" className="mb-2 block text-sm font-medium text-slate-900">
+                            Etusivun lisätiedot
+                          </label>
+                          <p className="mb-2 text-xs text-slate-500">
+                            Lyhyt teksti, joka näkyy ilmoituskortissa. Esim. Hatchback, katsastettu, siisti!
+                          </p>
+                          <textarea
+                            id="homepageDescription"
+                            value={String(formData.homepageDescription ?? '')}
+                            onChange={(event) => handleChange('homepageDescription')(event.target.value)}
+                            maxLength={200}
+                            rows={3}
+                            className="w-full rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                          />
+                          <p className="mt-2 text-sm text-slate-500">
+                            {`${String(formData.homepageDescription ?? '').length} / 200 merkkiä`}
+                          </p>
+                        </div>
+                        <div>
+                          <label htmlFor="externalListingUrl" className="mb-2 block text-sm font-medium text-slate-900">
+                            Lisätietolinkki
+                          </label>
+                          <p className="mb-2 text-xs text-slate-500">
+                            Vapaaehtoinen linkki esimerkiksi liikkeen verkkosivulle tai ajoneuvon tarkempaan ilmoitukseen.
+                          </p>
+                          <input
+                            id="externalListingUrl"
+                            type="url"
+                            value={String(formData.externalListingUrl ?? '')}
+                            onChange={(event) => handleChange('externalListingUrl')(event.target.value)}
+                            placeholder="https://example.com/ajoneuvo"
+                            className="w-full rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                          />
+                        </div>
+                      </>
+                    ) : null}
                     {section.fields.map((field) => {
                       switch (field.type) {
                         case 'text':
@@ -426,7 +483,7 @@ function CreateListingDetailsContent() {
                         case 'checkboxGroup':
                           return <CheckboxGroup key={field.key} label={field.label} options={field.options ?? []} values={formData[field.key] ?? []} onChange={(vals) => setFormData((p) => ({ ...p, [field.key]: vals }))} />;
                         case 'textarea':
-                          return <Textarea key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} />;
+                          return <Textarea key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} maxLength={3000} />;
                         case 'image':
                           return <ImageUpload key={field.key} images={formData.images ?? []} uploadedImages={uploadedImages} onAdd={handleAddImages} onRemove={handleRemoveImage} onRemoveUploaded={createdListingId ? handleRemoveUploadedImage : undefined} onReorder={handleReorderImages} error={imageError} />;
                         case 'location':
@@ -492,4 +549,3 @@ export default function CreateListingDetailsPage() {
     </main>
   );
 }
-

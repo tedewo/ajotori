@@ -11,6 +11,7 @@ export interface SupabaseListingRow {
   year?: number | null;
   price?: number | null;
   description?: string | null;
+  homepage_description?: string | null;
   region?: string | null;
   municipality?: string | null;
   seller_type?: 'private' | 'company';
@@ -56,6 +57,7 @@ export function mapSupabaseListingToAjotoriListing(row: SupabaseListingRow, sell
     province: mapDisplayText(row.region),
     municipality: mapDisplayText(row.municipality),
     description: row.description ?? '',
+    homepageDescription: row.homepage_description ?? undefined,
     technicalSpecs,
     mileage: mapMileage(technicalData.mileage),
     features: row.equipment ?? [],

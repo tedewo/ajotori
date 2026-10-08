@@ -58,7 +58,7 @@ export default async function AccountPage() {
   const profile = profileData as AccountProfile | null;
   const { data: listingData, error: listingError } = await supabase
     .from('listings')
-    .select('id, seller_id, category_slug, subcategory_slug, title, brand, model, year, price, description, region, municipality, seller_type, external_listing_url, status, technical_data, equipment, created_at, updated_at')
+    .select('id, seller_id, category_slug, subcategory_slug, title, brand, model, year, price, description, homepage_description, region, municipality, seller_type, external_listing_url, status, technical_data, equipment, created_at, updated_at')
     .eq('seller_id', data.user.id)
     .order('created_at', { ascending: false });
 

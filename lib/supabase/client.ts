@@ -48,6 +48,7 @@ export type Database = {
           year: number | null;
           price: number | null;
           description: string | null;
+          homepage_description: string | null;
           region: string | null;
           municipality: string | null;
           seller_type: 'private' | 'company';
@@ -69,6 +70,7 @@ export type Database = {
           year?: number | null;
           price?: number | null;
           description?: string | null;
+          homepage_description?: string | null;
           region?: string | null;
           municipality?: string | null;
           seller_type?: 'private' | 'company';
@@ -90,6 +92,7 @@ export type Database = {
           year: number | null;
           price: number | null;
           description: string | null;
+          homepage_description: string | null;
           region: string | null;
           municipality: string | null;
           seller_type: 'private' | 'company';

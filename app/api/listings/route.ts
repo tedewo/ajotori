@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { parseListingContent } from '@/lib/listing-content';
 import type { Database } from '@/lib/supabase/client';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -14,6 +15,7 @@ const DEFAULT_EXCLUDED_KEYS = new Set([
   'year',
   'price',
   'description',
+  'homepage_description',
   'region',
   'municipality',
   'seller_type',
@@ -197,10 +199,12 @@ export async function POST(request: Request) {
   const sellerType: 'private' | 'company' = profileRow?.seller_type === 'company' ? 'company' : 'private';
   const equipmentSource = Array.isArray(payload.equipment) ? payload.equipment : payload.features;
   const equipment = Array.isArray(equipmentSource) ? equipmentSource.filter((item) => typeof item === 'string') : [];
-  const description = normaliseText(payload.description) ?? normaliseText(payload.details) ?? '';
   const region = normaliseText(payload.region) ?? normaliseText(payload.province);
   const municipality = normaliseText(payload.municipality);
-  const externalListingUrl = normaliseText(payload.external_listing_url) ?? null;
+  const parsedContent = parseListingContent(payload);
+  if ('error' in parsedContent) {
+    return NextResponse.json({ error: parsedContent.error }, { status: 400 });
+  }
 
   const insertPayload: Database['public']['Tables']['listings']['Insert'] = {
     seller_id: userData.user.id,
@@ -211,11 +215,12 @@ export async function POST(request: Request) {
     model: normaliseText(payload.model),
     year: Number.isFinite(yearRaw) ? Math.trunc(yearRaw) : null,
     price: priceRaw,
-    description,
+    description: parsedContent.data.description,
+    homepage_description: parsedContent.data.homepageDescription,
     region,
     municipality,
     seller_type: sellerType,
-    external_listing_url: externalListingUrl,
+    external_listing_url: parsedContent.data.externalListingUrl,
     status: 'draft',
     technical_data: buildTechnicalData(payload as Record<string, unknown>),
     equipment,
