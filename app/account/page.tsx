@@ -4,11 +4,19 @@ import { createServerClient, getCurrentUser } from '@/lib/supabase/server';
 import { mapSupabaseListingToAjotoriListing, type SupabaseListingRow } from '@/lib/supabase/mappers';
 import { formatPrice } from '@/lib/listings';
 import PublishListingButton from '@/app/components/listings/PublishListingButton';
+import ListingActions from '@/app/components/listings/ListingActions';
 
 type AccountProfile = {
   display_name?: string | null;
   role?: string | null;
   seller_type?: string | null;
+};
+
+const LISTING_STATUS_LABELS: Record<string, string> = {
+  draft: 'Luonnos',
+  published: 'Julkaistu',
+  sold: 'Myyty',
+  removed: 'Poistettu',
 };
 
 export default async function AccountPage() {
@@ -118,22 +126,26 @@ export default async function AccountPage() {
         ) : (
           <div className="mt-6 divide-y divide-slate-100">
             {ownListings.map((listing) => (
-              <div key={listing.id} className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-slate-900">{listing.title || [listing.brand, listing.model].filter(Boolean).join(' ') || 'Nimetön ilmoitus'}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {[listing.category, listing.subcategory].filter(Boolean).join(' / ')}
-                    {listing.price ? ` · ${formatPrice(listing.price)}` : ''}
-                  </p>
+              <div key={listing.id} className="flex flex-col gap-4 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words font-semibold text-slate-900">{listing.title || [listing.brand, listing.model].filter(Boolean).join(' ') || 'Nimetön ilmoitus'}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                    <span>{[listing.category, listing.subcategory].filter(Boolean).join(' / ')}</span>
+                    {listing.price ? <span>· {formatPrice(listing.price)}</span> : null}
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                      {LISTING_STATUS_LABELS[listing.status] ?? listing.status}
+                    </span>
+                  </div>
                 </div>
-                {listing.status === 'draft' ? <PublishListingButton listingId={listing.id} /> : null}
-                {listing.status === 'published' ? (
-                  <Link href={`/ilmoitukset/${listing.id}`} className="text-sm font-semibold text-[#0ea5e9] hover:text-[#0ca4dd]">
-                    Avaa julkaistu ilmoitus
-                  </Link>
-                ) : null}
-                {listing.status === 'sold' ? <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Myyty</span> : null}
-                {listing.status === 'removed' ? <span className="w-fit rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Poistettu</span> : null}
+                <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 sm:justify-end">
+                  {listing.status === 'draft' ? <PublishListingButton listingId={listing.id} /> : null}
+                  <ListingActions
+                    listingId={listing.id}
+                    category={listing.category}
+                    subcategory={listing.subcategory}
+                    isPublished={listing.status === 'published'}
+                  />
+                </div>
               </div>
             ))}
           </div>

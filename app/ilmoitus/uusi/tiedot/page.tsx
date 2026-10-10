@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -23,12 +23,19 @@ import PublishListingButton from '@/app/components/listings/PublishListingButton
 const MAX_IMAGES = 20;
 const MAX_IMAGE_SIZE_MB = 10;
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+const LISTING_STATUS_LABELS: Record<string, string> = {
+  draft: 'Luonnos',
+  published: 'Julkaistu',
+  sold: 'Myyty',
+  removed: 'Poistettu',
+};
 
 function CreateListingDetailsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categorySlug = searchParams.get('category') ?? '';
   const subcategorySlug = searchParams.get('subcategory') ?? '';
+  const editId = searchParams.get('edit');
 
   const category = categorySlug ? getCategoryBySlug(categorySlug) : null;
   const subcategory = category && subcategorySlug ? getSubcategoryBySlug(categorySlug, subcategorySlug) : null;
@@ -64,14 +71,105 @@ function CreateListingDetailsContent() {
   const [submitMessage, setSubmitMessage] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlight = useRef(false);
   const [imageError, setImageError] = useState('');
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
   const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string }>>([]);
+  const [isLoadingEdit, setIsLoadingEdit] = useState(Boolean(editId));
+  const [editLoadError, setEditLoadError] = useState('');
+  const [listingStatus, setListingStatus] = useState('');
   const [activeSectionKey, setActiveSectionKey] = useState(formConfig?.sections[0]?.key ?? '');
 
   useEffect(() => {
-    setActiveSectionKey(formConfig?.sections[0]?.key ?? '');
-  }, [formConfig]);
+    const firstVisibleSection = formConfig?.sections.find((section) => !(editId && section.key === 'contact'));
+    setActiveSectionKey(firstVisibleSection?.key ?? '');
+  }, [formConfig, editId]);
+
+  useEffect(() => {
+    if (!editId) {
+      setIsLoadingEdit(false);
+      setEditLoadError('');
+      setListingStatus('');
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingEdit(true);
+    setEditLoadError('');
+
+    const loadListing = async () => {
+      try {
+        const response = await fetch(`/api/listings/${encodeURIComponent(editId)}`);
+        const result = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          listing?: {
+            id: string;
+            category_slug: string | null;
+            subcategory_slug: string | null;
+            title: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            price: number | null;
+            description: string | null;
+            homepage_description: string | null;
+            region: string | null;
+            municipality: string | null;
+            external_listing_url: string | null;
+            status: string;
+            technical_data: Record<string, unknown> | null;
+            equipment: string[] | null;
+          };
+          images?: Array<{ id: string; url: string }>;
+        };
+
+        if (!response.ok || !result.listing) {
+          throw new Error(result.error || 'Ilmoituksen lataaminen epäonnistui.');
+        }
+
+        if (
+          result.listing.category_slug !== categorySlug ||
+          result.listing.subcategory_slug !== subcategorySlug
+        ) {
+          throw new Error('Ilmoituksen kategoria ei vastaa muokkausosoitetta. Palaa omiin ilmoituksiin ja yritä uudelleen.');
+        }
+
+        if (cancelled) return;
+        setFormData({
+          ...initialValues,
+          ...(result.listing.technical_data ?? {}),
+          title: result.listing.title ?? '',
+          brand: result.listing.brand ?? '',
+          model: result.listing.model ?? '',
+          year: result.listing.year == null ? '' : String(result.listing.year),
+          price: result.listing.price == null ? '' : String(result.listing.price),
+          details: result.listing.description ?? '',
+          homepageDescription: result.listing.homepage_description ?? '',
+          externalListingUrl: result.listing.external_listing_url ?? '',
+          province: result.listing.region ?? '',
+          municipality: result.listing.municipality ?? '',
+          features: result.listing.equipment ?? [],
+          images: [],
+        });
+        setUploadedImages(result.images ?? []);
+        setCreatedListingId(result.listing.id);
+        setListingStatus(result.listing.status);
+      } catch (error) {
+        if (!cancelled) {
+          setEditLoadError(error instanceof Error ? error.message : 'Ilmoituksen lataaminen epäonnistui.');
+        }
+      } finally {
+        if (!cancelled) setIsLoadingEdit(false);
+      }
+    };
+
+    void loadListing();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, categorySlug, subcategorySlug, initialValues]);
+
+  const visibleSections = formConfig?.sections.filter((section) => !(editId && section.key === 'contact')) ?? [];
 
   const createGeneratedTitle = (values: Record<string, any>) => {
     const brand = typeof values.brand === 'string' ? values.brand.trim() : '';
@@ -98,7 +196,9 @@ function CreateListingDetailsContent() {
       const year = typeof next.year === 'string' || typeof next.year === 'number' ? String(next.year).trim() : '';
       const tags = [brand, model, year].filter(Boolean);
       next.searchTags = tags;
-      next.title = createGeneratedTitle(next);
+      if (['brand', 'model', 'year'].includes(key)) {
+        next.title = createGeneratedTitle(next);
+      }
       return next;
     });
   };
@@ -229,40 +329,58 @@ function CreateListingDetailsContent() {
       return;
     }
 
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
+    setIsSubmitting(true);
     const supabase = createBrowserClient();
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    let userData: Awaited<ReturnType<typeof supabase.auth.getUser>>['data'];
+    let userError: Awaited<ReturnType<typeof supabase.auth.getUser>>['error'];
+    try {
+      const authResult = await supabase.auth.getUser();
+      userData = authResult.data;
+      userError = authResult.error;
+    } catch (error) {
+      submitInFlight.current = false;
+      setIsSubmitting(false);
+      setSubmitError(error instanceof Error ? error.message : 'Kirjautumisen tarkistus epäonnistui.');
+      setSubmitMessage('');
+      return;
+    }
 
     if (userError || !userData.user) {
+      submitInFlight.current = false;
+      setIsSubmitting(false);
       setSubmitError('Et ole kirjautunut. Kirjaudu sisään jatkaaksesi.');
       setSubmitMessage('');
       router.push('/auth/sign-in');
       return;
     }
 
-    setIsSubmitting(true);
     setSubmitError('');
-    setSubmitMessage('Tallennetaan ilmoitusta luonnoksena...');
+    setSubmitMessage(editId ? 'Tallennetaan muutoksia...' : 'Tallennetaan ilmoitusta luonnoksena...');
 
     try {
+      const payload = {
+        ...formData,
+        category_slug: categorySlug,
+        subcategory_slug: subcategorySlug,
+        title: formData.title || createGeneratedTitle(formData),
+        region: formData.province,
+        municipality: formData.municipality,
+        description: formData.details ?? formData.description ?? '',
+        homepage_description: formData.homepageDescription ?? '',
+        external_listing_url: formData.externalListingUrl ?? null,
+        features: Array.isArray(formData.features) ? formData.features : [],
+      };
       let listingId = createdListingId;
       if (!listingId) {
-        const payload = {
-          ...formData,
-          category_slug: categorySlug,
-          subcategory_slug: subcategorySlug,
-          title: formData.title || createGeneratedTitle(formData),
-          region: formData.province,
-          municipality: formData.municipality,
-          description: formData.details ?? formData.description ?? '',
-          homepage_description: formData.homepageDescription ?? '',
-          seller_type: formData.sellerType ?? 'private',
-          external_listing_url: formData.externalListingUrl ?? null,
-        };
-
         const response = await fetch('/api/listings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            seller_type: formData.sellerType ?? 'private',
+          }),
         });
         const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string; listingId?: string };
         if (!response.ok || !result.listingId) throw new Error(result.error || 'Tallennus epäonnistui.');
@@ -272,14 +390,11 @@ function CreateListingDetailsContent() {
         const response = await fetch(`/api/listings/${listingId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            homepage_description: formData.homepageDescription ?? '',
-            description: formData.details ?? formData.description ?? '',
-            external_listing_url: formData.externalListingUrl ?? '',
-          }),
+          body: JSON.stringify(payload),
         });
-        const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string };
+        const result = (await response.json().catch(() => ({ error: 'Tallennus epäonnistui.' }))) as { error?: string; status?: string };
         if (!response.ok) throw new Error(result.error || 'Tallennus epäonnistui.');
+        if (result.status) setListingStatus(result.status);
       }
 
       const files = formData.images ?? [];
@@ -289,7 +404,11 @@ function CreateListingDetailsContent() {
         setFormData((current) => ({ ...current, images: [] }));
       }
 
-      setSubmitMessage(files.length > 0 ? 'Ilmoitus ja kuvat on tallennettu luonnoksena.' : 'Ilmoitus on tallennettu luonnoksena.');
+      setSubmitMessage(editId
+        ? 'Muutokset tallennettiin. Ilmoituksen tila säilyi ennallaan.'
+        : files.length > 0
+          ? 'Ilmoitus ja kuvat on tallennettu luonnoksena.'
+          : 'Ilmoitus on tallennettu luonnoksena.');
       setSubmitError('');
     } catch (error) {
       console.error('Listing save failed:', error);
@@ -297,8 +416,24 @@ function CreateListingDetailsContent() {
       setSubmitMessage('');
     } finally {
       setIsSubmitting(false);
+      submitInFlight.current = false;
     }
   };
+
+  if (editId && isLoadingEdit) {
+    return <div className="mx-auto max-w-4xl px-4 py-12 text-sm text-slate-600">Ladataan ilmoitusta muokkausta varten...</div>;
+  }
+
+  if (editId && editLoadError) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-12">
+        <div className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+          <p>{editLoadError}</p>
+          <Link href="/account" className="mt-4 inline-flex font-semibold text-rose-800 hover:underline">Takaisin omiin ilmoituksiin</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!category || !subcategory) {
     return (
@@ -317,22 +452,35 @@ function CreateListingDetailsContent() {
     <div className="mx-auto container-center py-10">
       <section className="max-w-4xl">
         <div className="mb-8">
-          <Link href={`/ilmoitus/uusi/${categorySlug}`} className="text-sm text-slate-600 hover:text-slate-900 mb-4 inline-block">← Takaisin</Link>
-          <h1 className="text-3xl font-semibold leading-tight text-slate-900">Ilmoituksen tiedot</h1>
+          <Link href={editId ? '/account' : `/ilmoitus/uusi/${categorySlug}`} className="text-sm text-slate-600 hover:text-slate-900 mb-4 inline-block">
+            {editId ? '← Takaisin omiin ilmoituksiin' : '← Takaisin'}
+          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-semibold leading-tight text-slate-900">
+              {editId ? 'Muokkaa ilmoitusta' : 'Ilmoituksen tiedot'}
+            </h1>
+            {editId && listingStatus ? (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                Tila: {LISTING_STATUS_LABELS[listingStatus] ?? listingStatus}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-2 text-sm text-slate-600">Kategoria: {category.title} → {subcategory.title}</p>
         </div>
 
         <div className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">Vaihe 3: Syötä ilmoituksen tiedot</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+            {editId ? 'Muokkaa ilmoituksen tietoja' : 'Vaihe 3: Syötä ilmoituksen tiedot'}
+          </h2>
 
           <form className="space-y-8" onSubmit={handleSubmit}>
             {!formConfig ? (
               <div className="rounded-[24px] border border-red-200 bg-red-50 p-4 text-sm text-red-900">Konfiguraatiota ei löytynyt valitulle alaluokalle.</div>
             ) : null}
 
-            {formConfig?.sections.length ? (
+            {visibleSections.length ? (
               <div className="mb-6 flex flex-wrap gap-2">
-                {formConfig.sections.map((section) => {
+                {visibleSections.map((section) => {
                   const isActive = activeSectionKey === section.key;
                   return (
                     <button
@@ -350,7 +498,7 @@ function CreateListingDetailsContent() {
               </div>
             ) : null}
 
-            {formConfig?.sections.filter((section) => section.key === activeSectionKey).map((section) => (
+            {visibleSections.filter((section) => section.key === activeSectionKey).map((section) => (
               <div key={section.key}>
                 <SectionCard title={section.title}>
                   <div className="grid gap-6 lg:grid-cols-2">
@@ -380,7 +528,7 @@ function CreateListingDetailsContent() {
                             Lisätietolinkki
                           </label>
                           <p className="mb-2 text-xs text-slate-500">
-                            Vapaaehtoinen linkki esimerkiksi liikkeen verkkosivulle tai ajoneuvon tarkempaan ilmoitukseen.
+                            Vapaaehtoinen linkki esimerkiksi liikkeen verkkosivulle tai ajoneuvon vaihtoehtoiseen ilmoitukseen.
                           </p>
                           <input
                             id="externalListingUrl"
@@ -485,6 +633,24 @@ function CreateListingDetailsContent() {
                         case 'textarea':
                           return <Textarea key={field.key} id={field.key} label={field.label} value={formData[field.key] ?? ''} onChange={handleChange(field.key)} maxLength={3000} />;
                         case 'image':
+                          if (editId) {
+                            return (
+                              <div key={field.key}>
+                                <p className="text-sm text-slate-600">Tallennetut kuvat säilytetään muokkauksen yhteydessä. Kuvien lisääminen tai poistaminen ei ole käytössä tässä näkymässä.</p>
+                                {uploadedImages.length > 0 ? (
+                                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                    {uploadedImages.map((image, index) => (
+                                      <div key={image.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                        <img src={image.url} alt={`Ilmoituksen kuva ${index + 1}`} className="h-24 w-full rounded-md object-cover" />
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="mt-3 text-sm text-slate-500">Ilmoituksella ei ole tallennettuja kuvia.</p>
+                                )}
+                              </div>
+                            );
+                          }
                           return <ImageUpload key={field.key} images={formData.images ?? []} uploadedImages={uploadedImages} onAdd={handleAddImages} onRemove={handleRemoveImage} onRemoveUploaded={createdListingId ? handleRemoveUploadedImage : undefined} onReorder={handleReorderImages} error={imageError} />;
                         case 'location':
                           return <LocationSelector key={field.key} province={formData.province ?? ''} municipality={formData.municipality ?? ''} onProvince={handleChange('province')} onMunicipality={handleChange('municipality')} />;
@@ -508,16 +674,16 @@ function CreateListingDetailsContent() {
 
             <div className="flex flex-col gap-4 pt-6 sm:flex-row">
               <button type="submit" disabled={isSubmitting} className="flex-1 rounded-[28px] bg-[#0ea5e9] px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-[#0ca4dd] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? 'Tallennetaan...' : 'Tallenna luonnos'}
+                {isSubmitting ? 'Tallennetaan...' : editId ? 'Tallenna muutokset' : 'Tallenna luonnos'}
               </button>
-              {createdListingId ? (
+              {createdListingId && !editId ? (
                 <PublishListingButton
                   listingId={createdListingId}
                   disabled={Boolean(publishValidationMessage) || isSubmitting}
                   disabledMessage={publishValidationMessage}
                 />
               ) : null}
-              <Link href="/ilmoitus/uusi" className="flex-1 rounded-[28px] border border-slate-300 px-6 py-3 text-center font-semibold text-slate-900 hover:bg-slate-50">Peruuta</Link>
+              <Link href={editId ? '/account' : '/ilmoitus/uusi'} className="flex-1 rounded-[28px] border border-slate-300 px-6 py-3 text-center font-semibold text-slate-900 hover:bg-slate-50">Peruuta</Link>
             </div>
             {submitMessage ? (<div className="rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">{submitMessage}</div>) : null}
             {submitError ? (<div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{submitError}</div>) : null}

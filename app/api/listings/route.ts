@@ -1,58 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { parseListingContent } from '@/lib/listing-content';
+import { buildTechnicalData } from '@/lib/listing-form-data';
 import type { Database } from '@/lib/supabase/client';
 import { createServerClient } from '@/lib/supabase/server';
-
-const DEFAULT_EXCLUDED_KEYS = new Set([
-  'category',
-  'subcategory',
-  'category_slug',
-  'subcategory_slug',
-  'title',
-  'brand',
-  'model',
-  'year',
-  'price',
-  'description',
-  'homepage_description',
-  'region',
-  'municipality',
-  'seller_type',
-  'external_listing_url',
-  'status',
-  'images',
-  'image',
-  'province',
-  'phone',
-  'email',
-  'details',
-  'features',
-  'searchTags',
-  'powerEquivalent',
-  'transmissionOther',
-  'fuelOther',
-  'hybridType',
-  'plugInHybrid',
-  'location',
-  'contact',
-]);
-
-const MASS_FIELD_KEYS = new Set(['curbWeight', 'totalWeight', 'maxTrailerWeight']);
-
-function isValidPositiveNumber(value: unknown): boolean {
-  if (typeof value !== 'number' && typeof value !== 'string') return false;
-  if (typeof value === 'string' && !value.trim()) return false;
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) && numericValue > 0;
-}
-
-function parseMassValue(value: unknown): number | null {
-  if (typeof value !== 'number' && typeof value !== 'string') return null;
-  if (typeof value === 'string' && !value.trim()) return null;
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) && numericValue >= 0 ? numericValue : null;
-}
 
 function normaliseText(value: unknown): string | null {
   if (typeof value === 'string') {
@@ -63,39 +14,6 @@ function normaliseText(value: unknown): string | null {
     return String(value);
   }
   return null;
-}
-
-function buildTechnicalData(payload: Record<string, unknown>) {
-  const technicalData: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(payload)) {
-    if (DEFAULT_EXCLUDED_KEYS.has(key)) continue;
-    if (value === null || value === undefined || value === '') continue;
-    if (Array.isArray(value) && value.length === 0) continue;
-    if (key === 'registrationType' && payload.registered !== 'Kyllä') continue;
-
-    if (key === 'maxPassengers') {
-      const passengerCount = parseMassValue(value);
-      if (passengerCount === null || passengerCount <= 0) continue;
-      technicalData[key] = passengerCount;
-      continue;
-    }
-
-    if (MASS_FIELD_KEYS.has(key)) {
-      const massValue = parseMassValue(value);
-      if (massValue === null || (key !== 'maxTrailerWeight' && massValue === 0)) continue;
-      technicalData[key] = massValue;
-      continue;
-    }
-
-    if (key === 'powerUnit') {
-      if (!isValidPositiveNumber(payload.power) || (value !== 'hv' && value !== 'kW')) continue;
-    }
-
-    technicalData[key] = value;
-  }
-
-  return technicalData;
 }
 
 export async function POST(request: Request) {
