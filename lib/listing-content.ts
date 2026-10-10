@@ -12,6 +12,25 @@ function normaliseText(value: unknown): string | null {
   return null;
 }
 
+export function getSafeExternalListingUrl(value?: string | null): string | undefined {
+  if (!value || /\s/.test(value)) return undefined;
+
+  try {
+    const parsedUrl = new URL(value);
+    if (
+      !/^https?:\/\//i.test(value) ||
+      !['http:', 'https:'].includes(parsedUrl.protocol) ||
+      !parsedUrl.hostname
+    ) {
+      return undefined;
+    }
+
+    return value;
+  } catch {
+    return undefined;
+  }
+}
+
 export function parseListingContent(payload: Record<string, unknown>) {
   const rawHomepageDescription = payload.homepage_description;
   const rawDescription = payload.description;
@@ -47,12 +66,8 @@ export function parseListingContent(payload: Record<string, unknown>) {
         return { error: 'Lisätietolinkki ei ole kelvollinen URL-osoite.' } as const;
       }
       try {
-        const parsedUrl = new URL(externalListingUrl);
-        if (
-          !/^https?:\/\//i.test(externalListingUrl) ||
-          !['http:', 'https:'].includes(parsedUrl.protocol) ||
-          !parsedUrl.hostname
-        ) {
+        new URL(externalListingUrl);
+        if (!getSafeExternalListingUrl(externalListingUrl)) {
           return { error: 'Lisätietolinkin on oltava http- tai https-osoite.' } as const;
         }
       } catch {
