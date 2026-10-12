@@ -4,7 +4,16 @@ import { getFormConfigBySlug } from '@/lib/formConfig';
 import { parseListingContent } from '@/lib/listing-content';
 import { buildTechnicalData } from '@/lib/listing-form-data';
 import type { Database } from '@/lib/supabase/client';
-import { createServerClient } from '@/lib/supabase/server';
+import {
+  getStorageRemovalErrorDetails,
+  removeListingImages,
+  type StorageRemovalFailure,
+} from '@/lib/supabase/remove-listing-images';
+import {
+  createServerClient,
+  createStorageAdminClient,
+  StorageAdminConfigurationError,
+} from '@/lib/supabase/server';
 
 type RouteContext = { params: Promise<{ id: string }> };
 type ListingRow = Database['public']['Tables']['listings']['Row'];
@@ -289,24 +298,65 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     );
   }
 
-  if (imageRecords.length > 0) {
-    const storagePaths = imageRecords.map(({ storage_path }) => storage_path);
-    const { error: storageError } = await supabase.storage.from('listings').remove(storagePaths);
+  const storagePaths = imageRecords.map(({ storage_path }) => storage_path);
+  let cleanupFailure: StorageRemovalFailure | null = null;
+  let pendingImagePaths: string[] = [];
 
-    if (storageError) {
+  if (storagePaths.length > 0) {
+    try {
+      const storageAdmin = createStorageAdminClient();
+      const cleanupResult = await removeListingImages(storageAdmin, storagePaths);
+      cleanupFailure = cleanupResult.failure;
+      pendingImagePaths = cleanupResult.pendingPaths;
+    } catch (error) {
+      pendingImagePaths = storagePaths;
+      if (error instanceof StorageAdminConfigurationError) {
+        cleanupFailure = {
+          reason: error.code,
+          error: getStorageRemovalErrorDetails(error),
+        };
+        console.error('Listing image cleanup configuration is incomplete:', {
+          listingId,
+          supabaseUrlSet: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+          serviceRoleKeySet: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+          reason: error.code,
+        });
+      } else {
+        cleanupFailure = {
+          reason: 'storage_client_error',
+          error: getStorageRemovalErrorDetails(error),
+        };
+      }
+    }
+
+    if (cleanupFailure) {
       console.error('Supabase listing image cleanup is pending:', {
         listingId,
         userId: userData.user.id,
-        storagePaths,
-        error: storageError,
+        storagePaths: pendingImagePaths,
+        reason: cleanupFailure.reason,
+        message: cleanupFailure.error.message,
+        status: cleanupFailure.error.status,
+        statusCode: cleanupFailure.error.statusCode,
+        code: cleanupFailure.error.code,
       });
       return NextResponse.json({
         ok: true,
         listingId,
-        warning: 'Joidenkin kuvien siivous jäi kesken; ylläpito siivoaa ne myöhemmin.',
+        imageCleanup: {
+          status: 'failed',
+          reason: cleanupFailure.reason,
+          error: cleanupFailure.error,
+        },
+        warning: 'Ilmoitus poistettiin, mutta kuvien siivous jäi kesken. Tallenna alla olevat polut myöhempää siivousta varten.',
+        pendingImagePaths,
       });
     }
   }
 
-  return NextResponse.json({ ok: true, listingId });
+  return NextResponse.json({
+    ok: true,
+    listingId,
+    imageCleanup: { status: 'success', removedCount: storagePaths.length },
+  });
 }

@@ -29,10 +29,51 @@ export default function ListingActions({
     setError('');
     try {
       const response = await fetch(`/api/listings/${encodeURIComponent(listingId)}`, { method: 'DELETE' });
-      const result = (await response.json().catch(() => ({}))) as { error?: string; warning?: string };
+      const result = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        warning?: string;
+        pendingImagePaths?: string[];
+        imageCleanup?: {
+          status?: 'success' | 'failed';
+          reason?: string;
+          error?: { message?: string; status?: number; statusCode?: string; code?: string };
+          removedCount?: number;
+        };
+      };
       if (!response.ok) throw new Error(result.error || 'Ilmoituksen poistaminen epäonnistui.');
       if (result.warning) {
-        window.alert(`Ilmoitus poistettiin onnistuneesti.\n\nVaroitus: ${result.warning}`);
+        const cleanupReason = result.imageCleanup?.reason;
+        const reasonMessage = cleanupReason === 'missing_service_role_key'
+          ? 'Palvelimen SUPABASE_SERVICE_ROLE_KEY-asetus puuttuu.'
+          : cleanupReason === 'missing_supabase_url'
+            ? 'Palvelimen NEXT_PUBLIC_SUPABASE_URL-asetus puuttuu.'
+            : cleanupReason === 'storage_api_rejected'
+              ? 'Supabase Storage hylkäsi poistopyynnön.'
+              : cleanupReason === 'storage_client_error'
+                ? 'Storage-asiakkaan tai verkkoyhteyden virhe.'
+                : '';
+        const details = result.imageCleanup?.error;
+        const errorDetails = details
+          ? [
+              details.message,
+              details.status === undefined ? null : `HTTP ${details.status}`,
+              details.statusCode ? `statusCode ${details.statusCode}` : null,
+              details.code ? `code ${details.code}` : null,
+            ].filter(Boolean).join(' — ')
+          : '';
+        const paths = result.pendingImagePaths?.length
+          ? `\n\nKuvien polut:\n${result.pendingImagePaths.join('\n')}`
+          : '';
+        window.alert(
+          `Ilmoitus poistettiin, mutta kuvien siivous jäi kesken.\n\n${reasonMessage}\n${errorDetails}\n\n${result.warning}${paths}`,
+        );
+      } else if (result.imageCleanup?.status === 'success') {
+        const removedCount = result.imageCleanup.removedCount ?? 0;
+        window.alert(
+          removedCount > 0
+            ? `Ilmoitus ja sen ${removedCount} kuvaa poistettiin onnistuneesti.`
+            : 'Ilmoitus poistettiin onnistuneesti. Ilmoituksella ei ollut kuvia.',
+        );
       }
       router.refresh();
     } catch (deleteError) {
