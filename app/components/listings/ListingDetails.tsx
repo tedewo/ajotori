@@ -1,6 +1,6 @@
 import type { Listing } from '@/lib/listings';
 import { formatMileage, formatPrice } from '@/lib/listings';
-import { getSafeExternalListingUrl } from '@/lib/listing-content';
+import { getExternalListingUrlDisplayText, getSafeExternalListingUrl } from '@/lib/listing-content';
 import { formatTechnicalSpecValue, getTechnicalSpecEntries } from '@/lib/technicalSpecs';
 import ListingGallery from './ListingGallery';
 import SellerInfo from './SellerInfo';
@@ -9,6 +9,7 @@ export default function ListingDetails({ listing }: { listing: Listing }) {
   const technicalEntries = getTechnicalSpecEntries(listing.technicalSpecs ?? {}, listing);
   const homepageDescription = listing.homepageDescription?.trim();
   const externalListingUrl = getSafeExternalListingUrl(listing.externalListingUrl);
+  const externalListingUrlDisplayText = getExternalListingUrlDisplayText(externalListingUrl);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -47,7 +48,7 @@ export default function ListingDetails({ listing }: { listing: Listing }) {
             <p className="mt-4 whitespace-pre-line text-slate-700">{listing.description}</p>
             {homepageDescription && (
               <div className="mt-6 border-t border-slate-100 pt-5">
-                <h3 className="text-sm font-semibold text-slate-900">Lisätietoa</h3>
+                <h3 className="text-sm font-semibold text-slate-900">Lyhyt lisätieto</h3>
                 <p className="mt-2 whitespace-pre-line text-slate-700">{homepageDescription}</p>
               </div>
             )}
@@ -60,7 +61,7 @@ export default function ListingDetails({ listing }: { listing: Listing }) {
               rel="noopener noreferrer"
               className="flex w-full items-center justify-between gap-4 rounded-[28px] border border-sky-200 bg-sky-50 px-6 py-5 font-semibold text-sky-900 transition hover:border-sky-300 hover:bg-sky-100"
             >
-              <span>Avaa alkuperäinen ilmoitus</span>
+              <span>{externalListingUrlDisplayText}</span>
               <span aria-hidden="true" className="text-lg">↗</span>
             </a>
           )}

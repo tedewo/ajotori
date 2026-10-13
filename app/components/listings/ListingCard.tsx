@@ -38,6 +38,10 @@ export default function ListingCard({ listing, returnTo }: { listing: Listing; r
           </div>
         </div>
 
+        {listing.homepageDescription?.trim() ? (
+          <p className="mt-2 text-sm text-slate-600">{listing.homepageDescription.trim()}</p>
+        ) : null}
+
         {details.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2 text-[12px] text-slate-600">
             {details.map((detail) => (

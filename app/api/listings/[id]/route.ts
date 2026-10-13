@@ -176,7 +176,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     description: getValue(payload, 'description', current.description),
     homepage_description: getValue(payload, 'homepage_description', current.homepage_description),
     external_listing_url: getValue(payload, 'external_listing_url', current.external_listing_url),
-  });
+  }, { existingHomepageDescription: current.homepage_description });
   if ('error' in parsedContent) {
     return NextResponse.json({ error: parsedContent.error }, { status: 400 });
   }

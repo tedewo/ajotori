@@ -1,4 +1,4 @@
-const MAX_HOMEPAGE_DESCRIPTION_LENGTH = 200;
+const MAX_HOMEPAGE_DESCRIPTION_LENGTH = 60;
 const MAX_DESCRIPTION_LENGTH = 3000;
 
 function normaliseText(value: unknown): string | null {
@@ -31,20 +31,45 @@ export function getSafeExternalListingUrl(value?: string | null): string | undef
   }
 }
 
-export function parseListingContent(payload: Record<string, unknown>) {
+export function getExternalListingUrlDisplayText(value?: string | null): string | undefined {
+  return getSafeExternalListingUrl(value)?.replace(/^https?:\/\//i, '');
+}
+
+export function normaliseExternalListingUrl(value?: string | null): string | undefined {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue || /\s/.test(trimmedValue)) return undefined;
+  const candidate = /^[a-z][a-z\d+.-]*:/i.test(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`;
+
+  return getSafeExternalListingUrl(candidate);
+}
+
+export function parseListingContent(
+  payload: Record<string, unknown>,
+  options: { existingHomepageDescription?: string | null } = {},
+) {
   const rawHomepageDescription = payload.homepage_description;
   const rawDescription = payload.description;
   const rawDetails = payload.details;
-  const homepageDescription = normaliseText(payload.homepage_description);
+  const homepageDescription = typeof rawHomepageDescription === 'string' &&
+    rawHomepageDescription.length > MAX_HOMEPAGE_DESCRIPTION_LENGTH &&
+    rawHomepageDescription === options.existingHomepageDescription
+    ? rawHomepageDescription
+    : normaliseText(payload.homepage_description);
   const description = normaliseText(payload.description) ?? normaliseText(payload.details) ?? '';
   const rawExternalListingUrl = payload.external_listing_url;
 
   if (rawHomepageDescription !== undefined && rawHomepageDescription !== null && typeof rawHomepageDescription !== 'string') {
-    return { error: 'Etusivun lisätietojen on oltava tekstiä.' } as const;
+    return { error: 'Lyhyen lisätiedon on oltava tekstiä.' } as const;
   }
 
-  if (typeof rawHomepageDescription === 'string' && rawHomepageDescription.length > MAX_HOMEPAGE_DESCRIPTION_LENGTH) {
-    return { error: 'Etusivun lisätiedot voivat olla enintään 200 merkkiä.' } as const;
+  if (
+    typeof rawHomepageDescription === 'string' &&
+    rawHomepageDescription.length > MAX_HOMEPAGE_DESCRIPTION_LENGTH &&
+    rawHomepageDescription !== options.existingHomepageDescription
+  ) {
+    return { error: 'Lyhyt lisätieto voi olla enintään 60 merkkiä.' } as const;
   }
 
   if (
@@ -62,17 +87,11 @@ export function parseListingContent(payload: Record<string, unknown>) {
 
     externalListingUrl = rawExternalListingUrl.trim() || null;
     if (externalListingUrl) {
-      if (/\s/.test(externalListingUrl)) {
-        return { error: 'Lisätietolinkki ei ole kelvollinen URL-osoite.' } as const;
+      const safeUrl = normaliseExternalListingUrl(externalListingUrl);
+      if (!safeUrl) {
+        return { error: 'Lisätietolinkin on oltava kelvollinen http- tai https-osoite.' } as const;
       }
-      try {
-        new URL(externalListingUrl);
-        if (!getSafeExternalListingUrl(externalListingUrl)) {
-          return { error: 'Lisätietolinkin on oltava http- tai https-osoite.' } as const;
-        }
-      } catch {
-        return { error: 'Lisätietolinkki ei ole kelvollinen URL-osoite.' } as const;
-      }
+      externalListingUrl = safeUrl;
     }
   }
 

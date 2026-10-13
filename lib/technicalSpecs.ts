@@ -73,6 +73,8 @@ const SUMMARY_LABELS: Record<'year' | 'mileage' | 'powerSource' | 'transmission'
   transmission: 'Vaihteisto',
 };
 
+const HIDDEN_TECHNICAL_SPEC_KEYS = new Set(['external listing url', 'homepage description']);
+
 function normalize(value: string): string {
   return value
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -116,7 +118,8 @@ export function getTechnicalSpecEntries(
 
   return Object.entries(technicalSpecs).flatMap(([key, value]) => {
     if (!value.trim()) return [];
-    if (normalize(key) === 'power unit') return [];
+    const normalizedKey = normalize(key);
+    if (normalizedKey === 'power unit' || HIDDEN_TECHNICAL_SPEC_KEYS.has(normalizedKey)) return [];
 
     const label = getLabel(key);
     const normalizedLabel = normalize(label);

@@ -506,7 +506,7 @@ function CreateListingDetailsContent() {
                       <>
                         <div>
                           <label htmlFor="homepageDescription" className="mb-2 block text-sm font-medium text-slate-900">
-                            Etusivun lisätiedot
+                            Lyhyt lisätieto
                           </label>
                           <p className="mb-2 text-xs text-slate-500">
                             Lyhyt teksti, joka näkyy ilmoituskortissa. Esim. Hatchback, katsastettu, siisti!
@@ -515,13 +515,18 @@ function CreateListingDetailsContent() {
                             id="homepageDescription"
                             value={String(formData.homepageDescription ?? '')}
                             onChange={(event) => handleChange('homepageDescription')(event.target.value)}
-                            maxLength={200}
+                            maxLength={60}
                             rows={3}
                             className="w-full rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
                           />
                           <p className="mt-2 text-sm text-slate-500">
-                            {`${String(formData.homepageDescription ?? '').length} / 200 merkkiä`}
+                            {`${String(formData.homepageDescription ?? '').length}/60`}
                           </p>
+                          {String(formData.homepageDescription ?? '').length > 60 ? (
+                            <p className="mt-1 text-xs text-amber-700">
+                              Tallennettu teksti ylittää nykyisen merkkirajan. Se säilyy ennallaan, kunnes lyhennät sitä.
+                            </p>
+                          ) : null}
                         </div>
                         <div>
                           <label htmlFor="externalListingUrl" className="mb-2 block text-sm font-medium text-slate-900">
@@ -532,10 +537,11 @@ function CreateListingDetailsContent() {
                           </p>
                           <input
                             id="externalListingUrl"
-                            type="url"
+                            type="text"
+                            inputMode="url"
                             value={String(formData.externalListingUrl ?? '')}
                             onChange={(event) => handleChange('externalListingUrl')(event.target.value)}
-                            placeholder="https://example.com/ajoneuvo"
+                            placeholder="www.esimerkki.fi/ajoneuvo"
                             className="w-full rounded-[24px] border border-slate-300 bg-white px-4 py-3 text-slate-900"
                           />
                         </div>
