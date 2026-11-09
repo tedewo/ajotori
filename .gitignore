@@ -33,3 +33,13 @@ yarn-error.log*
 *.swo
 *~
 *.tsbuildinfo
+
+# Local Supabase project state
+/supabase/.branches/_current_branch
+/supabase/.temp/cli-latest
+/supabase/config.toml
+/tests/integration/database/isolated-supabase/supabase/.branches/_current_branch
+/tests/integration/database/isolated-supabase/supabase/.temp/cli-latest
+/tests/integration/database/isolated-supabase/supabase/.temp/start-secrets/supabase_edge_runtime_ajotori-listing-lifecycle-test/env/docker.env
+/tests/integration/database/isolated-supabase/supabase/functions
+/tests/integration/database/isolated-supabase/supabase/migrations

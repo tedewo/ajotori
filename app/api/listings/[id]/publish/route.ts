@@ -115,19 +115,37 @@ export async function PATCH(_request: Request, { params }: RouteContext) {
     );
   }
 
-  const { data: updatedListing, error: updateError } = await (supabase as any)
-    .from('listings')
-    .update({ status: 'published', updated_at: new Date().toISOString() })
-    .eq('id', listingId)
-    .eq('seller_id', userData.user.id)
-    .eq('status', 'draft')
-    .select('id, status')
-    .maybeSingle();
+  const { data: result, error: publishError } = await supabase.rpc('publish_listing', {
+    p_listing_id: listingId,
+  });
 
-  if (updateError || !updatedListing) {
-    console.error('Failed to publish listing:', updateError);
+  if (publishError) {
+    console.error('Failed to publish listing:', publishError);
     return NextResponse.json({ error: 'Ilmoituksen julkaisu epäonnistui. Yritä uudelleen.' }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, listingId: updatedListing.id, status: updatedListing.status });
+  if (result === 'not_found') {
+    return NextResponse.json({ error: 'Ilmoitusta ei löytynyt tai se ei kuulu sinulle.' }, { status: 404 });
+  }
+  if (result === 'not_draft') {
+    return NextResponse.json({ error: 'Vain luonnoksena olevan ilmoituksen voi julkaista.' }, { status: 409 });
+  }
+  if (result === 'cleanup_pending') {
+    return NextResponse.json({ error: 'Ilmoitusta ei voi julkaista, koska sen poistaminen on jo aloitettu.' }, { status: 409 });
+  }
+  if (result === 'missing_images') {
+    return NextResponse.json({ error: 'Lisää vähintään yksi kuva ennen julkaisemista.' }, { status: 422 });
+  }
+  if (result === 'invalid_category') {
+    return NextResponse.json({ error: 'Valitse ilmoitukselle kelvollinen kategoria ja alakategoria.' }, { status: 422 });
+  }
+  if (result === 'missing_required_fields') {
+    return NextResponse.json({ error: 'Täydennä ilmoituksen pakolliset tiedot ennen julkaisemista.' }, { status: 422 });
+  }
+  if (result !== 'published') {
+    console.error('Listing publish RPC returned an unexpected result:', result);
+    return NextResponse.json({ error: 'Ilmoituksen julkaisu epäonnistui. Yritä uudelleen.' }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, listingId, status: 'published' });
 }

@@ -139,7 +139,6 @@ export async function POST(request: Request) {
     municipality,
     seller_type: sellerType,
     external_listing_url: parsedContent.data.externalListingUrl,
-    status: 'draft',
     technical_data: buildTechnicalData(payload as Record<string, unknown>),
     equipment,
   };

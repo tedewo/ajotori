@@ -10,6 +10,11 @@ import {
   type StorageRemovalFailure,
 } from '@/lib/supabase/remove-listing-images';
 import {
+  completeListingStorageCleanup,
+  enqueueListingDeletionCleanup,
+  listListingStorageCleanupTasks,
+} from '@/lib/supabase/listing-storage-cleanup';
+import {
   createServerClient,
   createStorageAdminClient,
   StorageAdminConfigurationError,
@@ -221,7 +226,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       municipality,
       technical_data: technicalData,
       equipment: rawEquipment,
-      updated_at: new Date().toISOString(),
     })
     .eq('id', listingId)
     .eq('seller_id', userData.user.id)
@@ -260,45 +264,47 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     console.error('Supabase listing delete ownership lookup failed:', listingError);
     return NextResponse.json({ error: 'Ilmoituksen omistajuuden tarkistus epäonnistui.' }, { status: 500 });
   }
-  if (!listing) return NextResponse.json({ error: 'Ilmoitusta ei löytynyt tai se ei kuulu sinulle.' }, { status: 404 });
 
-  const { data: imageRows, error: imageError } = await supabase
-    .from('listing_images')
-    .select('id, storage_path')
-    .eq('listing_id', listingId);
-
-  if (imageError) {
-    console.error('Supabase listing delete image lookup failed:', imageError);
-    return NextResponse.json({ error: 'Ilmoituksen kuvien tarkistus epäonnistui. Ilmoitusta ei poistettu.' }, { status: 500 });
-  }
-
-  const imageRecords = (imageRows ?? []) as Array<{ id: string; storage_path: string }>;
-  const storagePrefix = `listings/${listingId}/`;
-  if (imageRecords.some(({ storage_path }) =>
-    !storage_path.startsWith(storagePrefix) ||
-    storage_path.slice(storagePrefix.length).split('/').some((part) => !part || part === '.' || part === '..')
-  )) {
-    console.error('Listing image path is outside its expected storage folder:', { listingId });
-    return NextResponse.json({ error: 'Ilmoituksen kuvapolkujen tarkistus epäonnistui. Ilmoitusta ei poistettu.' }, { status: 500 });
-  }
-
-  const { data: deletedListing, error: deleteError } = await supabase
-    .from('listings')
-    .delete()
-    .eq('id', listingId)
-    .eq('seller_id', userData.user.id)
-    .select('id')
-    .maybeSingle();
-
-  if (deleteError || !deletedListing) {
-    console.error('Supabase listing delete failed:', { listingId, error: deleteError });
-    return NextResponse.json(
-      { error: 'Ilmoituksen poistaminen epäonnistui. Kuvat säilytettiin.' },
-      { status: 500 },
+  if (listing) {
+    const { error: enqueueError } = await enqueueListingDeletionCleanup(
+      supabase,
+      listingId,
     );
+    if (enqueueError) {
+      console.error('Failed to persist listing image cleanup tasks:', {
+        listingId,
+        error: enqueueError,
+      });
+      return NextResponse.json(
+        { error: 'Kuvien siivoustehtäviä ei voitu tallentaa. Ilmoitusta ei poistettu.' },
+        { status: 500 },
+      );
+    }
   }
 
-  const storagePaths = imageRecords.map(({ storage_path }) => storage_path);
+  const { data: cleanupTasks, error: taskError } =
+    await listListingStorageCleanupTasks(supabase, listingId);
+  if (taskError) {
+    console.error('Failed to load persisted listing image cleanup tasks:', {
+      listingId,
+      error: taskError,
+    });
+    return NextResponse.json({ error: 'Kuvien siivoustietoja ei voitu tarkistaa.' }, { status: 500 });
+  }
+  if (!listing && (!cleanupTasks || cleanupTasks.length === 0)) {
+    return NextResponse.json({ error: 'Ilmoitusta ei löytynyt tai se ei kuulu sinulle.' }, { status: 404 });
+  }
+
+  const storagePrefix = `listings/${listingId}/`;
+  const storagePaths = (cleanupTasks ?? []).map((task) => task.storage_path);
+  if (storagePaths.some((path) =>
+    !path.startsWith(storagePrefix)
+    || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(path.slice(storagePrefix.length))
+  )) {
+    console.error('Persisted listing image path is outside its expected storage folder:', { listingId });
+    return NextResponse.json({ error: 'Ilmoituksen kuvapolkujen tarkistus epäonnistui.' }, { status: 500 });
+  }
+
   let cleanupFailure: StorageRemovalFailure | null = null;
   let pendingImagePaths: string[] = [];
 
@@ -341,16 +347,60 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
         code: cleanupFailure.error.code,
       });
       return NextResponse.json({
-        ok: true,
+        ok: false,
         listingId,
         imageCleanup: {
-          status: 'failed',
+          status: 'pending',
           reason: cleanupFailure.reason,
           error: cleanupFailure.error,
         },
-        warning: 'Ilmoitus poistettiin, mutta kuvien siivous jäi kesken. Tallenna alla olevat polut myöhempää siivousta varten.',
+        warning: 'Kuvien siivoustehtävä tallennettiin. Ilmoitus säilytettiin turvallista uudelleenyritystä varten.',
         pendingImagePaths,
+      }, { status: 503 });
+    }
+  }
+
+  if (listing) {
+    const { data: deletedListing, error: deleteError } = await supabase
+      .from('listings')
+      .delete()
+      .eq('id', listingId)
+      .eq('seller_id', userData.user.id)
+      .select('id')
+      .maybeSingle();
+
+    if (deleteError || !deletedListing) {
+      console.error('Supabase listing delete failed after image cleanup:', {
+        listingId,
+        error: deleteError,
       });
+      return NextResponse.json(
+        { error: 'Ilmoituksen poistaminen epäonnistui. Kuvat on siivottu ja pyyntö voidaan uusia.' },
+        { status: 500 },
+      );
+    }
+  }
+
+  if (storagePaths.length > 0) {
+    try {
+      const storageAdmin = createStorageAdminClient();
+      const { error } = await completeListingStorageCleanup(
+        storageAdmin,
+        listingId,
+        storagePaths,
+      );
+      if (error) throw error;
+    } catch (error) {
+      console.error('Listing image cleanup completed but queue acknowledgement failed:', {
+        listingId,
+        error: getStorageRemovalErrorDetails(error),
+      });
+      return NextResponse.json({
+        ok: true,
+        listingId,
+        imageCleanup: { status: 'pending_acknowledgement' },
+        warning: 'Kuvat poistettiin, mutta siivousjonon kuittaus jäi kesken. Poistopyyntö voidaan uusia turvallisesti.',
+      }, { status: 202 });
     }
   }
 

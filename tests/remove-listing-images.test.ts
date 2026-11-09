@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import {
+const removeListingImagesModule = '../lib/supabase/remove-listing-images' + '.ts';
+const {
   getStorageRemovalErrorDetails,
   removeListingImages,
-} from '../lib/supabase/remove-listing-images';
+} = await import(new URL(removeListingImagesModule, import.meta.url).href);
 
 const imagePaths = [
   'listings/listing-1/photo-a.jpg',
@@ -70,7 +71,7 @@ test('does not call Storage when the listing has no images', async () => {
   assert.deepEqual(result, { failure: null, pendingPaths: [] });
 });
 
-test('returns the exact failed paths when Storage reports an error', async () => {
+test('simulated Storage API failure returns every possibly pending path', async () => {
   const storageError = Object.assign(new Error('Storage API failed'), {
     status: 403,
     statusCode: '403',
@@ -125,7 +126,7 @@ test('sends the stored bucket-relative paths unchanged to Storage remove', async
   assert.deepEqual(requestedPaths, storedPaths);
 });
 
-test('returns the exact failed paths when the Storage call throws', async () => {
+test('simulated Storage client exception returns every possibly pending path', async () => {
   const storageError = new Error('Storage request failed');
   const client = {
     storage: {

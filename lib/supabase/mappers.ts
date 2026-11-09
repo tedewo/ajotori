@@ -19,6 +19,9 @@ export interface SupabaseListingRow {
   status?: 'draft' | 'published' | 'sold' | 'removed';
   technical_data?: Record<string, unknown> | null;
   equipment?: string[] | null;
+  published_at?: string | null;
+  expires_at?: string | null;
+  renewal_deadline?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

@@ -1,4 +1,5 @@
 import type { Listing } from '@/lib/listings';
+import { filterUnexpiredListings, isListingUnexpiredAt } from '@/lib/listing-expiration';
 import { mapSupabaseListingToAjotoriListing, type SupabaseListingRow } from '@/lib/supabase/mappers';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -15,7 +16,13 @@ type ListingImageRow = {
 
 async function getPublishedListingRows(filters: ListingFilters = {}) {
   const supabase = await createServerClient();
-  let query = supabase.from('listings').select('*').eq('status', 'published').order('created_at', { ascending: false });
+  const visibilityTime = new Date();
+  let query = supabase
+    .from('listings')
+    .select('*')
+    .eq('status', 'published')
+    .gt('expires_at', visibilityTime.toISOString())
+    .order('created_at', { ascending: false });
 
   if (filters.categorySlug) query = query.eq('category_slug', filters.categorySlug);
   if (filters.subcategorySlug) query = query.eq('subcategory_slug', filters.subcategorySlug);
@@ -25,7 +32,7 @@ async function getPublishedListingRows(filters: ListingFilters = {}) {
     console.error('Published listings query failed:', error.message);
     return [];
   }
-  return data as SupabaseListingRow[];
+  return filterUnexpiredListings(data as SupabaseListingRow[], new Date());
 }
 
 async function getListingImages(listingIds: string[]) {
@@ -93,14 +100,16 @@ export async function getPublishedListings(filters: ListingFilters = {}) {
 
 export async function getPublishedListingById(id: string) {
   const supabase = await createServerClient();
+  const visibilityTime = new Date();
   const { data, error } = await supabase
     .from('listings')
     .select('*')
     .eq('id', id)
     .eq('status', 'published')
+    .gt('expires_at', visibilityTime.toISOString())
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data || !isListingUnexpiredAt(data.expires_at, new Date())) return null;
 
   const [listing] = await mapPublishedListings([data as SupabaseListingRow], true);
   return listing ?? null;

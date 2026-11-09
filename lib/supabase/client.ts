@@ -56,6 +56,9 @@ export type Database = {
           status: 'draft' | 'published' | 'sold' | 'removed';
           technical_data: Record<string, unknown> | null;
           equipment: string[] | null;
+          published_at: string | null;
+          expires_at: string | null;
+          renewal_deadline: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -78,6 +81,9 @@ export type Database = {
           status?: 'draft' | 'published' | 'sold' | 'removed';
           technical_data?: Record<string, unknown> | null;
           equipment?: string[] | null;
+          published_at?: string | null;
+          expires_at?: string | null;
+          renewal_deadline?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -100,6 +106,9 @@ export type Database = {
           status: 'draft' | 'published' | 'sold' | 'removed';
           technical_data: Record<string, unknown> | null;
           equipment: string[] | null;
+          published_at: string | null;
+          expires_at: string | null;
+          renewal_deadline: string | null;
           created_at: string;
           updated_at: string;
         }>;
@@ -151,6 +160,39 @@ export type Database = {
       get_published_listing_seller_display_name: {
         Args: { p_listing_id: string };
         Returns: string | null;
+      };
+      publish_listing: {
+        Args: { p_listing_id: string };
+        Returns: string;
+      };
+      renew_listing: {
+        Args: { p_listing_id: string };
+        Returns: string;
+      };
+      enqueue_listing_storage_cleanup: {
+        Args: {
+          p_listing_id: string;
+          p_image_id: string | null;
+          p_storage_path: string;
+          p_reason: 'listing_delete' | 'image_delete' | 'upload_compensation';
+        };
+        Returns: string;
+      };
+      enqueue_listing_deletion_cleanup: {
+        Args: { p_listing_id: string };
+        Returns: number;
+      };
+      list_listing_storage_cleanup_tasks: {
+        Args: { p_listing_id: string; p_image_id?: string | null };
+        Returns: Array<{
+          image_id: string | null;
+          storage_path: string;
+          reason: 'listing_delete' | 'image_delete' | 'upload_compensation';
+        }>;
+      };
+      complete_listing_storage_cleanup: {
+        Args: { p_listing_id: string; p_storage_paths: string[] };
+        Returns: number;
       };
     };
   };
